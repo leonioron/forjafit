@@ -145,25 +145,25 @@ export function ReportsView({
       .slice(-16);
   }, [state.logs, activeProgressionId]);
 
-  const handleExportJSON = () => {
+  const handleExportJSON = async () => {
     const payload = buildBackupPayload(state);
     const json = JSON.stringify(payload, null, 2);
     const filename = `forjafit-backup-${getTodayISO()}.json`;
-    const ok = triggerFileDownload(json, filename, 'application/json');
+    const ok = await triggerFileDownload(json, filename, 'application/json');
     if (ok) {
       onNotify('Backup JSON exportado.');
     }
     setJsonExportPreview(json);
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (state.logs.length === 0) {
       onNotify('Conclua pelo menos 1 exercício antes de exportar o CSV.');
       return;
     }
     const csv = generateCSVReport(state);
     const filename = `forjafit-relatorio-${getTodayISO()}.csv`;
-    const ok = triggerFileDownload(csv, filename, 'text/csv;charset=utf-8;');
+    const ok = await triggerFileDownload(csv, filename, 'text/csv;charset=utf-8;');
     if (ok) {
       onNotify('Relatório CSV exportado.');
     }

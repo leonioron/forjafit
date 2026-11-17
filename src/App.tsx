@@ -280,10 +280,16 @@ export default function App() {
     showToast(mode === 'replace' ? 'Backup restaurado.' : 'Dados mesclados com sucesso.');
   };
 
-  const handleQuickExportJSON = () => {
+  const handleQuickExportJSON = async () => {
     const payload = buildBackupPayload(appState);
-    triggerFileDownload(JSON.stringify(payload, null, 2), `forjafit-backup-${getTodayISO()}.json`, 'application/json');
-    showToast('Backup JSON baixado.');
+    const ok = await triggerFileDownload(
+      JSON.stringify(payload, null, 2),
+      `forjafit-backup-${getTodayISO()}.json`,
+      'application/json'
+    );
+    if (ok) {
+      showToast('Backup JSON exportado.');
+    }
   };
 
   const navItems: { id: TabId; label: string; icon: typeof CalendarCheck2 }[] = [

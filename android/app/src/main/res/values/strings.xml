@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ForjaFit Agenda</string>
+    <string name="title_activity_main">ForjaFit Agenda</string>
+    <string name="package_name">com.forjafit.agenda</string>
+    <string name="custom_url_scheme">com.forjafit.agenda</string>
+</resources>

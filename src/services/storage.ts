@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { createDefaultScheduleItems, DEFAULT_DAY_PLANS, DEFAULT_EXERCISES, MUSCLE_GROUPS } from '../data/catalog';
 import { AppDataState, BackupPayload, DayOfWeek, DayPlan, Exercise, ScheduledItem, WorkoutLog } from '../types/workout';
 import { formatDateBR, generateId } from '../utils/validation';
@@ -308,7 +311,31 @@ export function generateCSVReport(state: AppDataState): string {
   return '\uFEFF' + [headers.join(';'), ...rows].join('\n');
 }
 
-export function triggerFileDownload(content: string, filename: string, mimeType: string): boolean {
+export async function triggerFileDownload(
+  content: string,
+  filename: string,
+  mimeType: string
+): Promise<boolean> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: content,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8,
+      });
+      await Share.share({
+        title: filename,
+        text: `Arquivo exportado pelo ForjaFit Agenda: ${filename}`,
+        url: writeResult.uri,
+        dialogTitle: 'Salvar ou compartilhar backup',
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   try {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
