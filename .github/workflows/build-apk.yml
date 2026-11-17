@@ -32,6 +32,27 @@ jobs:
             yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
           fi
 
+      - name: Configure Gradle Maven mirror
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat << 'EOF' > ~/.gradle/init.d/maven-mirror.gradle
+          gradle.beforeProject { project ->
+            project.buildscript.repositories.all { repo ->
+              if (repo instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository && repo.url.toString().contains("repo.maven.apache.org")) {
+                repo.setUrl("https://maven-central.storage-download.googleapis.com/maven2/")
+              }
+            }
+            project.repositories.all { repo ->
+              if (repo instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository && repo.url.toString().contains("repo.maven.apache.org")) {
+                repo.setUrl("https://maven-central.storage-download.googleapis.com/maven2/")
+              }
+            }
+          }
+          EOF
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install dependencies and build web bundle
         run: |
           npm install --legacy-peer-deps
@@ -42,7 +63,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --max-workers=2
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
