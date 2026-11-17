@@ -1,0 +1,906 @@
+import { DayPlan, Exercise, MuscleGroup, ScheduledItem } from '../types/workout';
+
+export const MUSCLE_GROUPS: MuscleGroup[] = [
+  {
+    id: 'peitoral',
+    order: 1,
+    name: 'Peitoral',
+    shortName: 'Peito',
+    description:
+      'O peitoral é dividido principalmente em regiões clavicular (superior), esternocostal (média) e abdominal (inferior). Os exercícios variam o ângulo de estímulo, mas não isolam perfeitamente cada região.',
+    subMuscles: ['Peitoral maior (clavicular)', 'Peitoral maior (esternocostal)', 'Peitoral menor'],
+    anatomyImagePath: '/exercises/group_01_peitoral.jpg',
+  },
+  {
+    id: 'costas',
+    order: 2,
+    name: 'Costas',
+    shortName: 'Costas',
+    description:
+      'As costas possuem diversos músculos que atuam na largura, espessura escapular e sustentação da coluna.',
+    subMuscles: [
+      'Grande dorsal: largura das costas',
+      'Trapézio: região superior e média',
+      'Romboides: entre as escápulas',
+      'Eretores da coluna: sustentação e extensão da coluna',
+    ],
+    anatomyImagePath: '/exercises/group_02_costas.jpg',
+  },
+  {
+    id: 'ombros',
+    order: 3,
+    name: 'Ombros (deltoides)',
+    shortName: 'Ombros',
+    description:
+      'O deltoide possui três porções principais que trabalham em conjunto nos movimentos de empurrar, elevar e estabilizar o ombro.',
+    subMuscles: [
+      'Anterior: frente do ombro',
+      'Lateral: lateral do ombro, importante para a largura visual',
+      'Posterior: parte de trás do ombro',
+    ],
+    anatomyImagePath: '/exercises/group_03_ombros.jpg',
+  },
+  {
+    id: 'biceps',
+    order: 4,
+    name: 'Bíceps e flexores do cotovelo',
+    shortName: 'Bíceps',
+    description:
+      'O braço não é composto apenas pelo bíceps braquial; braquial e braquiorradial são fundamentais para volume e força de flexão.',
+    subMuscles: [
+      'Bíceps braquial: flexão do cotovelo e rotação da palma para cima',
+      'Braquial: fica abaixo do bíceps e ajuda na flexão do cotovelo',
+      'Braquiorradial: participa da flexão, especialmente com pegada neutra',
+    ],
+    anatomyImagePath: '/exercises/group_04_biceps.jpg',
+  },
+  {
+    id: 'triceps',
+    order: 5,
+    name: 'Tríceps',
+    shortName: 'Tríceps',
+    description:
+      'O tríceps possui três cabeças que compõem a maior parte do volume do braço e realizam a extensão do cotovelo.',
+    subMuscles: [
+      'Longa: maior porção, atravessa a articulação do ombro',
+      'Lateral: região externa do braço',
+      'Medial: região mais profunda',
+    ],
+    anatomyImagePath: '/exercises/group_05_triceps.jpg',
+  },
+  {
+    id: 'quadriceps',
+    order: 6,
+    name: 'Quadríceps (anterior da coxa)',
+    shortName: 'Quadríceps',
+    description:
+      'O quadríceps possui quatro músculos na parte anterior da coxa e sua principal função é estender o joelho.',
+    subMuscles: ['Reto femoral', 'Vasto lateral', 'Vasto medial', 'Vasto intermédio'],
+    anatomyImagePath: '/exercises/group_06_quadriceps.jpg',
+  },
+  {
+    id: 'posterior',
+    order: 7,
+    name: 'Posterior de coxa',
+    shortName: 'Posterior',
+    description:
+      'Os isquiotibiais participam da flexão dos joelhos e extensão dos quadris, sendo essenciais para equilíbrio e força dos membros inferiores.',
+    subMuscles: ['Bíceps femoral', 'Semitendíneo', 'Semimembranáceo'],
+    anatomyImagePath: '/exercises/group_07_posterior.jpg',
+  },
+  {
+    id: 'gluteos',
+    order: 8,
+    name: 'Glúteos',
+    shortName: 'Glúteos',
+    description:
+      'Três músculos principais responsáveis pela extensão, estabilização e abdução do quadril.',
+    subMuscles: [
+      'Glúteo máximo: volume e extensão do quadril',
+      'Glúteo médio: estabilização e abdução do quadril',
+      'Glúteo mínimo: estabilização e abdução do quadril',
+    ],
+    anatomyImagePath: '/exercises/group_08_gluteos.jpg',
+  },
+  {
+    id: 'panturrilhas',
+    order: 9,
+    name: 'Panturrilhas',
+    shortName: 'Panturrilha',
+    description:
+      'Composta pelo gastrocnêmio e pelo sóleo, trabalha na flexão plantar com joelhos estendidos ou flexionados.',
+    subMuscles: [
+      'Gastrocnêmio: músculo mais superficial e volumoso',
+      'Sóleo: músculo localizado abaixo do gastrocnêmio',
+    ],
+    anatomyImagePath: '/exercises/group_09_panturrilhas.jpg',
+  },
+  {
+    id: 'abdomen',
+    order: 10,
+    name: 'Abdômen e core',
+    shortName: 'Abdômen',
+    description:
+      'Conjunto de músculos responsáveis pela flexão da coluna, rotação e estabilização profunda do tronco.',
+    subMuscles: [
+      'Reto abdominal: região frontal',
+      'Oblíquos: laterais do abdômen',
+      'Transverso abdominal: estabilização profunda do tronco',
+    ],
+    anatomyImagePath: '/exercises/group_10_abdomen.jpg',
+  },
+  {
+    id: 'antebracos',
+    order: 11,
+    name: 'Antebraços e força de pegada',
+    shortName: 'Antebraço',
+    description:
+      'Os antebraços possuem diversos músculos responsáveis por flexionar e estender o punho, girar o antebraço e sustentar a pegada.',
+    subMuscles: ['Flexores do punho', 'Extensores do punho', 'Braquiorradial'],
+    anatomyImagePath: '/exercises/group_11_antebracos.jpg',
+  },
+];
+
+export const DEFAULT_EXERCISES: Exercise[] = [
+  // 1. Peitoral (5)
+  {
+    id: 'ex-1-1',
+    code: '1.1',
+    muscleGroupId: 'peitoral',
+    name: 'Supino reto com barra',
+    primaryMuscle: 'Peitoral maior',
+    secondaryMuscles: 'Tríceps e deltoide anterior',
+    equipment: 'Banco reto e barra',
+    execution:
+      'Deite no banco, mantenha os pés apoiados, retire a barra do suporte, desça controladamente em direção à região média do peito e empurre até quase estender os cotovelos.',
+    tip: 'Mantenha as escápulas estáveis e evite deixar os cotovelos excessivamente abertos.',
+    imagePath: '/exercises/ex_1_1.jpg',
+  },
+  {
+    id: 'ex-1-2',
+    code: '1.2',
+    muscleGroupId: 'peitoral',
+    name: 'Supino inclinado com halteres',
+    primaryMuscle: 'Região superior do peitoral',
+    secondaryMuscles: 'Tríceps e deltoide anterior',
+    equipment: 'Banco inclinado e halteres',
+    execution:
+      'Ajuste o banco entre aproximadamente 30° e 45°. Comece com os halteres próximos ao peito e empurre para cima, mantendo o controle na descida.',
+    tip: 'Inclinações muito altas podem aumentar a participação dos ombros.',
+    imagePath: '/exercises/ex_1_2.jpg',
+  },
+  {
+    id: 'ex-1-3',
+    code: '1.3',
+    muscleGroupId: 'peitoral',
+    name: 'Crucifixo com halteres',
+    primaryMuscle: 'Peitoral maior',
+    secondaryMuscles: 'Deltoide anterior',
+    equipment: 'Banco reto e halteres',
+    execution:
+      'Deitado, mantenha os braços levemente flexionados. Abra os braços lateralmente até uma amplitude confortável e retorne aproximando os halteres acima do peito.',
+    tip: 'Não transforme o exercício em um supino; mantenha o ângulo dos cotovelos praticamente constante.',
+    imagePath: '/exercises/ex_1_3.jpg',
+  },
+  {
+    id: 'ex-1-4',
+    code: '1.4',
+    muscleGroupId: 'peitoral',
+    name: 'Crossover na polia',
+    primaryMuscle: 'Peitoral maior',
+    secondaryMuscles: 'Deltoide anterior',
+    equipment: 'Estação de cabos',
+    execution:
+      'Fique entre as polias, segure as alças e traga os braços à frente do corpo, aproximando as mãos.',
+    tip: 'Mantenha o tronco estável e evite usar impulso para movimentar os cabos.',
+    imagePath: '/exercises/ex_1_4.jpg',
+  },
+  {
+    id: 'ex-1-5',
+    code: '1.5',
+    muscleGroupId: 'peitoral',
+    name: 'Peck deck (voador)',
+    primaryMuscle: 'Peitoral maior',
+    secondaryMuscles: 'Deltoide anterior',
+    equipment: 'Máquina peck deck',
+    execution:
+      'Ajuste o banco para que os cotovelos fiquem aproximadamente na altura do peito. Feche os braços à frente e retorne lentamente.',
+    tip: 'Evite alongar excessivamente os ombros na posição inicial.',
+    imagePath: '/exercises/ex_1_5.jpg',
+  },
+
+  // 2. Costas (6)
+  {
+    id: 'ex-2-1',
+    code: '2.1',
+    muscleGroupId: 'costas',
+    name: 'Puxada frontal (pulldown)',
+    primaryMuscle: 'Grande dorsal',
+    secondaryMuscles: 'Bíceps, braquial e romboides',
+    equipment: 'Máquina de puxada',
+    execution:
+      'Segure a barra um pouco além da largura dos ombros, incline levemente o tronco e puxe a barra em direção à parte superior do peito.',
+    tip: 'Não puxe atrás da nuca. Evite balançar o corpo.',
+    imagePath: '/exercises/ex_2_1.jpg',
+  },
+  {
+    id: 'ex-2-2',
+    code: '2.2',
+    muscleGroupId: 'costas',
+    name: 'Barra fixa',
+    primaryMuscle: 'Grande dorsal',
+    secondaryMuscles: 'Bíceps, braquial e musculatura escapular',
+    equipment: 'Barra fixa',
+    execution:
+      'Pendure-se na barra, estabilize as escápulas e eleve o corpo até o queixo ultrapassar a barra. Desça controladamente.',
+    tip: 'Utilize uma máquina assistida ou elástico se ainda não conseguir executar o movimento completo.',
+    imagePath: '/exercises/ex_2_2.jpg',
+  },
+  {
+    id: 'ex-2-3',
+    code: '2.3',
+    muscleGroupId: 'costas',
+    name: 'Remada baixa com cabo',
+    primaryMuscle: 'Grande dorsal e romboides',
+    secondaryMuscles: 'Trapézio médio, bíceps e deltoide posterior',
+    equipment: 'Polia baixa',
+    execution:
+      'Sente-se, mantenha a coluna neutra e puxe o pegador em direção ao abdômen, aproximando as escápulas.',
+    tip: 'Não arredonde as costas nem faça movimentos exagerados com o tronco.',
+    imagePath: '/exercises/ex_2_3.jpg',
+  },
+  {
+    id: 'ex-2-4',
+    code: '2.4',
+    muscleGroupId: 'costas',
+    name: 'Remada curvada com barra',
+    primaryMuscle: 'Grande dorsal e musculatura das costas médias',
+    secondaryMuscles: 'Bíceps, trapézio e eretores da coluna',
+    equipment: 'Barra',
+    execution:
+      'Incline o tronco com quadril para trás, mantenha a coluna neutra e puxe a barra em direção ao abdômen.',
+    tip: 'Mantenha o abdômen contraído e não utilize o impulso da lombar.',
+    imagePath: '/exercises/ex_2_4.jpg',
+  },
+  {
+    id: 'ex-2-5',
+    code: '2.5',
+    muscleGroupId: 'costas',
+    name: 'Remada unilateral com halter',
+    primaryMuscle: 'Grande dorsal',
+    secondaryMuscles: 'Romboides, trapézio e bíceps',
+    equipment: 'Halter e banco',
+    execution:
+      'Apoie uma mão e um joelho no banco. Com a outra mão, puxe o halter em direção ao quadril.',
+    tip: 'Evite girar o tronco para levantar o peso.',
+    imagePath: '/exercises/ex_2_5.jpg',
+  },
+  {
+    id: 'ex-2-6',
+    code: '2.6',
+    muscleGroupId: 'costas',
+    name: 'Encolhimento com halteres',
+    primaryMuscle: 'Trapézio superior',
+    secondaryMuscles: 'Levantador da escápula',
+    equipment: 'Halteres',
+    execution:
+      'Mantenha os braços estendidos ao lado do corpo e eleve os ombros em direção às orelhas. Retorne lentamente.',
+    tip: 'Não faça círculos com os ombros.',
+    imagePath: '/exercises/ex_2_6.jpg',
+  },
+
+  // 3. Ombros (5)
+  {
+    id: 'ex-3-1',
+    code: '3.1',
+    muscleGroupId: 'ombros',
+    name: 'Desenvolvimento com halteres',
+    primaryMuscle: 'Deltoide anterior e lateral',
+    secondaryMuscles: 'Tríceps e trapézio',
+    equipment: 'Banco e halteres',
+    execution:
+      'Sente-se com as costas apoiadas, posicione os halteres na altura dos ombros e empurre para cima. Desça controladamente.',
+    tip: 'Não arqueie excessivamente a lombar.',
+    imagePath: '/exercises/ex_3_1.jpg',
+  },
+  {
+    id: 'ex-3-2',
+    code: '3.2',
+    muscleGroupId: 'ombros',
+    name: 'Elevação lateral com halteres',
+    primaryMuscle: 'Deltoide lateral',
+    secondaryMuscles: 'Trapézio superior e supraespinal',
+    equipment: 'Halteres',
+    execution:
+      'Com os braços ao lado do corpo e cotovelos levemente flexionados, eleve os halteres lateralmente até aproximadamente a altura dos ombros.',
+    tip: 'Utilize cargas moderadas e evite balançar o tronco.',
+    imagePath: '/exercises/ex_3_2.jpg',
+  },
+  {
+    id: 'ex-3-3',
+    code: '3.3',
+    muscleGroupId: 'ombros',
+    name: 'Elevação frontal',
+    primaryMuscle: 'Deltoide anterior',
+    secondaryMuscles: 'Deltoide lateral e peitoral superior',
+    equipment: 'Halteres ou barra',
+    execution:
+      'Eleve os braços à frente do corpo até a altura dos ombros e retorne lentamente.',
+    tip: 'Não é necessário subir acima da cabeça. O deltoide anterior já participa bastante dos exercícios de supino.',
+    imagePath: '/exercises/ex_3_3.jpg',
+  },
+  {
+    id: 'ex-3-4',
+    code: '3.4',
+    muscleGroupId: 'ombros',
+    name: 'Crucifixo inverso',
+    primaryMuscle: 'Deltoide posterior',
+    secondaryMuscles: 'Romboides e trapézio médio',
+    equipment: 'Halteres',
+    execution:
+      'Incline o tronco, mantenha os braços levemente flexionados e abra-os lateralmente.',
+    tip: 'Concentre-se em movimentar os braços sem transformar o exercício em uma remada.',
+    imagePath: '/exercises/ex_3_4.jpg',
+  },
+  {
+    id: 'ex-3-5',
+    code: '3.5',
+    muscleGroupId: 'ombros',
+    name: 'Face pull',
+    primaryMuscle: 'Deltoide posterior',
+    secondaryMuscles: 'Trapézio, romboides e rotadores externos do ombro',
+    equipment: 'Polia alta com corda',
+    execution:
+      'Puxe a corda em direção ao rosto, separando as mãos ao final do movimento.',
+    tip: 'Mantenha os cotovelos elevados, sem forçar a articulação do ombro.',
+    imagePath: '/exercises/ex_3_5.jpg',
+  },
+
+  // 4. Bíceps (5)
+  {
+    id: 'ex-4-1',
+    code: '4.1',
+    muscleGroupId: 'biceps',
+    name: 'Rosca direta com barra',
+    primaryMuscle: 'Bíceps braquial',
+    secondaryMuscles: 'Braquial e braquiorradial',
+    equipment: 'Barra reta ou W',
+    execution:
+      'Segure a barra com as palmas voltadas para cima. Flexione os cotovelos até aproximar a barra do peito e desça lentamente.',
+    tip: 'Mantenha os cotovelos próximos ao tronco e não balance as costas.',
+    imagePath: '/exercises/ex_4_1.jpg',
+  },
+  {
+    id: 'ex-4-2',
+    code: '4.2',
+    muscleGroupId: 'biceps',
+    name: 'Rosca alternada com halteres',
+    primaryMuscle: 'Bíceps braquial',
+    secondaryMuscles: 'Braquial e braquiorradial',
+    equipment: 'Halteres',
+    execution:
+      'Comece com as palmas voltadas para o corpo. Ao subir cada halter, gire a mão até deixar a palma voltada para cima.',
+    tip: 'Faça um braço de cada vez, sem utilizar o impulso do corpo.',
+    imagePath: '/exercises/ex_4_2.jpg',
+  },
+  {
+    id: 'ex-4-3',
+    code: '4.3',
+    muscleGroupId: 'biceps',
+    name: 'Rosca martelo',
+    primaryMuscle: 'Braquial e braquiorradial',
+    secondaryMuscles: 'Bíceps braquial',
+    equipment: 'Halteres',
+    execution:
+      'Segure os halteres com as palmas voltadas uma para a outra. Flexione os cotovelos mantendo essa posição das mãos.',
+    tip: 'Excelente variação para trabalhar os músculos que dão volume ao braço além do bíceps.',
+    imagePath: '/exercises/ex_4_3.jpg',
+  },
+  {
+    id: 'ex-4-4',
+    code: '4.4',
+    muscleGroupId: 'biceps',
+    name: 'Rosca Scott',
+    primaryMuscle: 'Bíceps braquial',
+    secondaryMuscles: 'Braquial',
+    equipment: 'Banco Scott e barra W ou halteres',
+    execution:
+      'Apoie a parte posterior dos braços no banco e flexione os cotovelos para levantar a carga. Retorne sem deixar os cotovelos travarem bruscamente.',
+    tip: 'Não desça além da amplitude confortável, especialmente se sentir tensão no cotovelo.',
+    imagePath: '/exercises/ex_4_4.jpg',
+  },
+  {
+    id: 'ex-4-5',
+    code: '4.5',
+    muscleGroupId: 'biceps',
+    name: 'Rosca concentrada',
+    primaryMuscle: 'Bíceps braquial',
+    secondaryMuscles: 'Braquial',
+    equipment: 'Halter e banco',
+    execution:
+      'Sentado, apoie o braço na parte interna da coxa e flexione o cotovelo levando o halter em direção ao ombro.',
+    tip: 'Mantenha o braço apoiado e evite movimentar o ombro para ajudar.',
+    imagePath: '/exercises/ex_4_5.jpg',
+  },
+
+  // 5. Tríceps (5)
+  {
+    id: 'ex-5-1',
+    code: '5.1',
+    muscleGroupId: 'triceps',
+    name: 'Tríceps corda na polia',
+    primaryMuscle: 'Tríceps braquial',
+    secondaryMuscles: 'Músculos estabilizadores do ombro',
+    equipment: 'Polia alta com corda',
+    execution:
+      'Mantenha os cotovelos próximos ao tronco e empurre a corda para baixo até estender os braços. Separe ligeiramente as pontas no final.',
+    tip: 'Não transforme o movimento em uma flexão do tronco.',
+    imagePath: '/exercises/ex_5_1.jpg',
+  },
+  {
+    id: 'ex-5-2',
+    code: '5.2',
+    muscleGroupId: 'triceps',
+    name: 'Tríceps testa',
+    primaryMuscle: 'Tríceps braquial',
+    secondaryMuscles: 'Estabilizadores do ombro',
+    equipment: 'Banco e barra W',
+    execution:
+      'Deitado, segure a barra acima do peito e flexione os cotovelos levando-a em direção à testa ou ligeiramente atrás da cabeça. Estenda novamente.',
+    tip: 'Mantenha os braços relativamente estáveis e escolha uma amplitude confortável.',
+    imagePath: '/exercises/ex_5_2.jpg',
+  },
+  {
+    id: 'ex-5-3',
+    code: '5.3',
+    muscleGroupId: 'triceps',
+    name: 'Tríceps francês com halter',
+    primaryMuscle: 'Cabeça longa do tríceps',
+    secondaryMuscles: 'Cabeças lateral e medial do tríceps',
+    equipment: 'Halter',
+    execution:
+      'Segure um halter acima da cabeça com as duas mãos. Flexione os cotovelos levando o peso para trás da cabeça e estenda novamente.',
+    tip: 'Mantenha o abdômen contraído e evite arquear a lombar.',
+    imagePath: '/exercises/ex_5_3.jpg',
+  },
+  {
+    id: 'ex-5-4',
+    code: '5.4',
+    muscleGroupId: 'triceps',
+    name: 'Tríceps pulley com barra',
+    primaryMuscle: 'Tríceps braquial',
+    secondaryMuscles: 'Estabilizadores do ombro',
+    equipment: 'Polia alta e barra',
+    execution:
+      'Segure a barra com as palmas voltadas para baixo e estenda os cotovelos, levando-a em direção às coxas.',
+    tip: 'Mantenha os cotovelos fixos ao lado do corpo.',
+    imagePath: '/exercises/ex_5_4.jpg',
+  },
+  {
+    id: 'ex-5-5',
+    code: '5.5',
+    muscleGroupId: 'triceps',
+    name: 'Mergulho nas paralelas',
+    primaryMuscle: 'Tríceps',
+    secondaryMuscles: 'Peitoral e deltoide anterior',
+    equipment: 'Barras paralelas ou máquina assistida',
+    execution:
+      'Sustente o corpo com os braços, flexione os cotovelos para descer e empurre para retornar.',
+    tip: 'Utilize a máquina assistida se necessário e evite descer além da mobilidade confortável dos ombros.',
+    imagePath: '/exercises/ex_5_5.jpg',
+  },
+
+  // 6. Quadríceps (5)
+  {
+    id: 'ex-6-1',
+    code: '6.1',
+    muscleGroupId: 'quadriceps',
+    name: 'Cadeira extensora',
+    primaryMuscle: 'Quadríceps',
+    secondaryMuscles: 'Sem secundários expressivos (isolado)',
+    equipment: 'Cadeira extensora',
+    execution:
+      'Sente-se, ajuste o apoio na região inferior da canela e estenda os joelhos até próximo da extensão completa. Retorne lentamente.',
+    tip: 'Ajuste o eixo da máquina à articulação do joelho.',
+    imagePath: '/exercises/ex_6_1.jpg',
+  },
+  {
+    id: 'ex-6-2',
+    code: '6.2',
+    muscleGroupId: 'quadriceps',
+    name: 'Leg press 45°',
+    primaryMuscle: 'Quadríceps',
+    secondaryMuscles: 'Glúteos e adutores',
+    equipment: 'Leg press',
+    execution:
+      'Apoie os pés na plataforma, destrave o equipamento e desça flexionando os joelhos até uma amplitude confortável. Empurre a plataforma para retornar.',
+    tip: 'Não deixe a lombar arredondar nem trave os joelhos bruscamente.',
+    imagePath: '/exercises/ex_6_2.jpg',
+  },
+  {
+    id: 'ex-6-3',
+    code: '6.3',
+    muscleGroupId: 'quadriceps',
+    name: 'Agachamento livre',
+    primaryMuscle: 'Quadríceps e glúteo máximo',
+    secondaryMuscles: 'Adutores, eretores da coluna e abdômen',
+    equipment: 'Barra e rack',
+    execution:
+      'Posicione a barra nas costas, mantenha os pés aproximadamente na largura dos ombros e desça flexionando quadris e joelhos. Suba mantendo o equilíbrio.',
+    tip: 'Utilize uma amplitude compatível com sua mobilidade e controle.',
+    imagePath: '/exercises/ex_6_3.jpg',
+  },
+  {
+    id: 'ex-6-4',
+    code: '6.4',
+    muscleGroupId: 'quadriceps',
+    name: 'Agachamento hack',
+    primaryMuscle: 'Quadríceps',
+    secondaryMuscles: 'Glúteos e adutores',
+    equipment: 'Máquina hack',
+    execution:
+      'Apoie as costas no encosto, posicione os pés na plataforma e flexione os joelhos para descer. Empurre para retornar.',
+    tip: 'Não permita que os joelhos colapsem para dentro.',
+    imagePath: '/exercises/ex_6_4.jpg',
+  },
+  {
+    id: 'ex-6-5',
+    code: '6.5',
+    muscleGroupId: 'quadriceps',
+    name: 'Agachamento búlgaro',
+    primaryMuscle: 'Quadríceps e glúteos',
+    secondaryMuscles: 'Adutores e estabilizadores do quadril',
+    equipment: 'Banco e halteres opcionais',
+    execution:
+      'Apoie o peito do pé de uma perna no banco atrás de você. Flexione a perna da frente para descer e empurre o chão para subir.',
+    tip: 'Comece sem peso para desenvolver equilíbrio.',
+    imagePath: '/exercises/ex_6_5.jpg',
+  },
+
+  // 7. Posterior de coxa (5)
+  {
+    id: 'ex-7-1',
+    code: '7.1',
+    muscleGroupId: 'posterior',
+    name: 'Mesa flexora',
+    primaryMuscle: 'Isquiotibiais',
+    secondaryMuscles: 'Gastrocnêmio',
+    equipment: 'Mesa flexora',
+    execution:
+      'Deite de barriga para baixo, ajuste o apoio próximo aos tornozelos e flexione os joelhos levando os calcanhares em direção aos glúteos.',
+    tip: 'Mantenha o quadril apoiado no banco.',
+    imagePath: '/exercises/ex_7_1.jpg',
+  },
+  {
+    id: 'ex-7-2',
+    code: '7.2',
+    muscleGroupId: 'posterior',
+    name: 'Cadeira flexora',
+    primaryMuscle: 'Isquiotibiais',
+    secondaryMuscles: 'Gastrocnêmio',
+    equipment: 'Cadeira flexora',
+    execution:
+      'Sentado, mantenha as coxas estabilizadas e flexione os joelhos contra a resistência. Retorne lentamente.',
+    tip: 'Ajuste os apoios para evitar movimentação excessiva do quadril.',
+    imagePath: '/exercises/ex_7_2.jpg',
+  },
+  {
+    id: 'ex-7-3',
+    code: '7.3',
+    muscleGroupId: 'posterior',
+    name: 'Stiff com barra',
+    primaryMuscle: 'Posterior de coxa e glúteos',
+    secondaryMuscles: 'Eretores da coluna e musculatura do tronco',
+    equipment: 'Barra',
+    execution:
+      'Segure a barra à frente das coxas, leve o quadril para trás e incline o tronco mantendo a coluna neutra. Desça até sentir alongamento no posterior e retorne.',
+    tip: 'Não é necessário encostar a barra no chão. Mantenha os joelhos levemente flexionados.',
+    imagePath: '/exercises/ex_7_3.jpg',
+  },
+  {
+    id: 'ex-7-4',
+    code: '7.4',
+    muscleGroupId: 'posterior',
+    name: 'Levantamento terra romeno com halteres',
+    primaryMuscle: 'Isquiotibiais e glúteos',
+    secondaryMuscles: 'Eretores da coluna e antebraços',
+    equipment: 'Halteres',
+    execution:
+      'Segure os halteres à frente das pernas, leve o quadril para trás e desça os pesos próximos às coxas e canelas. Retorne estendendo o quadril.',
+    tip: 'Mantenha os pesos próximos ao corpo durante todo o movimento.',
+    imagePath: '/exercises/ex_7_4.jpg',
+  },
+  {
+    id: 'ex-7-5',
+    code: '7.5',
+    muscleGroupId: 'posterior',
+    name: 'Nordic curl',
+    primaryMuscle: 'Isquiotibiais',
+    secondaryMuscles: 'Glúteos e panturrilhas',
+    equipment: 'Suporte para fixar os tornozelos',
+    execution:
+      'Ajoelhe-se com os tornozelos presos e incline lentamente o tronco para a frente, resistindo à queda. Utilize as mãos para amortecer e retornar.',
+    tip: 'É um exercício avançado. Comece com amplitude reduzida ou assistência.',
+    imagePath: '/exercises/ex_7_5.jpg',
+  },
+
+  // 8. Glúteos (4)
+  {
+    id: 'ex-8-1',
+    code: '8.1',
+    muscleGroupId: 'gluteos',
+    name: 'Elevação pélvica (Hip thrust)',
+    primaryMuscle: 'Glúteo máximo',
+    secondaryMuscles: 'Posteriores de coxa e abdômen',
+    equipment: 'Banco e barra',
+    execution:
+      'Apoie as costas no banco, posicione a barra sobre o quadril e empurre o chão com os pés até elevar o quadril. Retorne controladamente.',
+    tip: 'No topo, contraia os glúteos sem hiperestender a lombar.',
+    imagePath: '/exercises/ex_8_1.jpg',
+  },
+  {
+    id: 'ex-8-2',
+    code: '8.2',
+    muscleGroupId: 'gluteos',
+    name: 'Cadeira abdutora',
+    primaryMuscle: 'Glúteo médio e mínimo',
+    secondaryMuscles: 'Glúteo máximo',
+    equipment: 'Cadeira abdutora',
+    execution:
+      'Sentado, posicione as pernas nos apoios e afaste os joelhos contra a resistência. Retorne devagar.',
+    tip: 'Não utilize impulso nem abra as pernas além da amplitude confortável.',
+    imagePath: '/exercises/ex_8_2.jpg',
+  },
+  {
+    id: 'ex-8-3',
+    code: '8.3',
+    muscleGroupId: 'gluteos',
+    name: 'Coice na polia',
+    primaryMuscle: 'Glúteo máximo',
+    secondaryMuscles: 'Posteriores de coxa',
+    equipment: 'Polia baixa e tornozeleira',
+    execution:
+      'Prenda a tornozeleira e leve a perna para trás, estendendo o quadril. Retorne lentamente.',
+    tip: 'Mantenha o tronco estável e não compense arqueando a lombar.',
+    imagePath: '/exercises/ex_8_3.jpg',
+  },
+  {
+    id: 'ex-8-4',
+    code: '8.4',
+    muscleGroupId: 'gluteos',
+    name: 'Glute bridge',
+    primaryMuscle: 'Glúteo máximo',
+    secondaryMuscles: 'Posteriores de coxa',
+    equipment: 'Colchonete, com possibilidade de usar peso',
+    execution:
+      'Deite de costas, flexione os joelhos e apoie os pés no chão. Eleve o quadril até alinhar tronco e coxas.',
+    tip: 'É uma boa alternativa ao hip thrust para iniciantes.',
+    imagePath: '/exercises/ex_8_4.jpg',
+  },
+
+  // 9. Panturrilhas (3)
+  {
+    id: 'ex-9-1',
+    code: '9.1',
+    muscleGroupId: 'panturrilhas',
+    name: 'Panturrilha em pé',
+    primaryMuscle: 'Gastrocnêmio',
+    secondaryMuscles: 'Sóleo',
+    equipment: 'Máquina de panturrilha em pé',
+    execution:
+      'Posicione a parte anterior dos pés na plataforma, desça os calcanhares e depois suba o máximo que conseguir confortavelmente.',
+    tip: 'Faça o movimento completo sem quicar.',
+    imagePath: '/exercises/ex_9_1.jpg',
+  },
+  {
+    id: 'ex-9-2',
+    code: '9.2',
+    muscleGroupId: 'panturrilhas',
+    name: 'Panturrilha sentada',
+    primaryMuscle: 'Sóleo',
+    secondaryMuscles: 'Gastrocnêmio',
+    equipment: 'Cadeira de panturrilha',
+    execution:
+      'Mantenha os joelhos flexionados, desça os calcanhares e eleve o peso ficando na ponta dos pés.',
+    tip: 'Excelente complemento à panturrilha em pé.',
+    imagePath: '/exercises/ex_9_2.jpg',
+  },
+  {
+    id: 'ex-9-3',
+    code: '9.3',
+    muscleGroupId: 'panturrilhas',
+    name: 'Panturrilha no leg press',
+    primaryMuscle: 'Gastrocnêmio e sóleo',
+    secondaryMuscles: 'Estabilizadores do tornozelo',
+    equipment: 'Leg press',
+    execution:
+      'Mantenha apenas a parte anterior dos pés apoiada na plataforma e movimente os tornozelos, elevando e abaixando os calcanhares.',
+    tip: 'Não flexione os joelhos durante a execução.',
+    imagePath: '/exercises/ex_9_3.jpg',
+  },
+
+  // 10. Abdômen (6)
+  {
+    id: 'ex-10-1',
+    code: '10.1',
+    muscleGroupId: 'abdomen',
+    name: 'Abdominal tradicional (crunch)',
+    primaryMuscle: 'Reto abdominal',
+    secondaryMuscles: 'Oblíquos',
+    equipment: 'Colchonete',
+    execution:
+      'Deite de costas, flexione os joelhos e eleve a cabeça e os ombros em direção ao quadril.',
+    tip: 'Não puxe a cabeça com as mãos.',
+    imagePath: '/exercises/ex_10_1.jpg',
+  },
+  {
+    id: 'ex-10-2',
+    code: '10.2',
+    muscleGroupId: 'abdomen',
+    name: 'Abdominal na polia',
+    primaryMuscle: 'Reto abdominal',
+    secondaryMuscles: 'Oblíquos',
+    equipment: 'Polia alta e corda',
+    execution:
+      'Ajoelhe-se diante da polia, segure a corda e flexione o tronco em direção ao quadril.',
+    tip: 'Concentre o movimento na flexão da coluna, não apenas nos braços.',
+    imagePath: '/exercises/ex_10_2.jpg',
+  },
+  {
+    id: 'ex-10-3',
+    code: '10.3',
+    muscleGroupId: 'abdomen',
+    name: 'Elevação de pernas suspenso',
+    primaryMuscle: 'Reto abdominal',
+    secondaryMuscles: 'Flexores do quadril',
+    equipment: 'Barra fixa',
+    execution:
+      'Pendure-se e eleve as pernas à frente do corpo, controlando a descida.',
+    tip: 'Comece com os joelhos flexionados se não conseguir manter o controle.',
+    imagePath: '/exercises/ex_10_3.jpg',
+  },
+  {
+    id: 'ex-10-4',
+    code: '10.4',
+    muscleGroupId: 'abdomen',
+    name: 'Prancha abdominal',
+    primaryMuscle: 'Musculatura estabilizadora do core',
+    secondaryMuscles: 'Glúteos, ombros e abdômen',
+    equipment: 'Colchonete',
+    execution:
+      'Apoie antebraços e pontas dos pés no chão, mantendo o corpo alinhado.',
+    tip: 'Contraia o abdômen e os glúteos. Evite deixar o quadril cair.',
+    imagePath: '/exercises/ex_10_4.jpg',
+  },
+  {
+    id: 'ex-10-5',
+    code: '10.5',
+    muscleGroupId: 'abdomen',
+    name: 'Prancha lateral',
+    primaryMuscle: 'Oblíquos',
+    secondaryMuscles: 'Glúteo médio e quadrado lombar',
+    equipment: 'Colchonete',
+    execution:
+      'Apoie um antebraço no chão e mantenha o corpo lateralmente alinhado, com o quadril elevado.',
+    tip: 'Comece apoiando os joelhos caso necessário.',
+    imagePath: '/exercises/ex_10_5.jpg',
+  },
+  {
+    id: 'ex-10-6',
+    code: '10.6',
+    muscleGroupId: 'abdomen',
+    name: 'Abdominal bicicleta',
+    primaryMuscle: 'Reto abdominal e oblíquos',
+    secondaryMuscles: 'Flexores do quadril',
+    equipment: 'Colchonete',
+    execution:
+      'Deite de costas, eleve as pernas e aproxime alternadamente um cotovelo do joelho oposto.',
+    tip: 'Faça o movimento lentamente, sem puxar a cabeça.',
+    imagePath: '/exercises/ex_10_6.jpg',
+  },
+
+  // 11. Antebraços (4)
+  {
+    id: 'ex-11-1',
+    code: '11.1',
+    muscleGroupId: 'antebracos',
+    name: 'Rosca de punho',
+    primaryMuscle: 'Flexores do punho',
+    secondaryMuscles: 'Músculos profundos do antebraço',
+    equipment: 'Halter ou barra',
+    execution:
+      'Sentado, apoie os antebraços nas coxas com as palmas para cima. Flexione os punhos elevando o peso.',
+    tip: 'Mantenha os antebraços apoiados durante todo o movimento.',
+    imagePath: '/exercises/ex_11_1.jpg',
+  },
+  {
+    id: 'ex-11-2',
+    code: '11.2',
+    muscleGroupId: 'antebracos',
+    name: 'Rosca de punho inversa',
+    primaryMuscle: 'Extensores do punho',
+    secondaryMuscles: 'Braquiorradial',
+    equipment: 'Halteres ou barra',
+    execution:
+      'Posicione as palmas voltadas para baixo e eleve o dorso das mãos, movimentando apenas os punhos.',
+    tip: 'Utilize cargas leves, pois os extensores geralmente trabalham com cargas menores.',
+    imagePath: '/exercises/ex_11_2.jpg',
+  },
+  {
+    id: 'ex-11-3',
+    code: '11.3',
+    muscleGroupId: 'antebracos',
+    name: 'Rosca inversa com barra',
+    primaryMuscle: 'Braquiorradial e braquial',
+    secondaryMuscles: 'Bíceps',
+    equipment: 'Barra W ou reta',
+    execution:
+      'Segure a barra com as palmas voltadas para baixo e flexione os cotovelos.',
+    tip: 'Evite movimentar os ombros e utilizar impulso.',
+    imagePath: '/exercises/ex_11_3.jpg',
+  },
+  {
+    id: 'ex-11-4',
+    code: '11.4',
+    muscleGroupId: 'antebracos',
+    name: "Farmer's walk",
+    primaryMuscle: 'Força de pegada e antebraços',
+    secondaryMuscles: 'Trapézio, abdômen, ombros e pernas',
+    equipment: 'Halteres ou kettlebells',
+    execution:
+      'Segure os pesos ao lado do corpo e caminhe mantendo postura ereta.',
+    tip: 'Utilize uma carga que permita caminhar sem inclinar o tronco.',
+    imagePath: '/exercises/ex_11_4.jpg',
+  },
+];
+
+export const DEFAULT_DAY_PLANS: DayPlan[] = [
+  { dayOfWeek: 1, label: 'Treino A · Peitoral e Tríceps', isRestDay: false },
+  { dayOfWeek: 2, label: 'Treino B · Costas e Bíceps', isRestDay: false },
+  { dayOfWeek: 3, label: 'Treino C · Quadríceps e Panturrilhas', isRestDay: false },
+  { dayOfWeek: 4, label: 'Treino D · Ombros e Antebraços', isRestDay: false },
+  { dayOfWeek: 5, label: 'Treino E · Posterior, Glúteos e Core', isRestDay: false },
+  { dayOfWeek: 6, label: 'Recuperação ativa / Livre', isRestDay: true },
+  { dayOfWeek: 0, label: 'Descanso', isRestDay: true },
+];
+
+export function createDefaultScheduleItems(): ScheduledItem[] {
+  return [
+    // Segunda — Treino A: Peitoral e Tríceps
+    { id: 'sch-a1', dayOfWeek: 1, exerciseId: 'ex-1-1', targetSets: 4, targetReps: 10, targetLoadKg: 40, order: 0 },
+    { id: 'sch-a2', dayOfWeek: 1, exerciseId: 'ex-1-2', targetSets: 3, targetReps: 10, targetLoadKg: 16, order: 1 },
+    { id: 'sch-a3', dayOfWeek: 1, exerciseId: 'ex-1-4', targetSets: 3, targetReps: 12, targetLoadKg: 15, order: 2 },
+    { id: 'sch-a4', dayOfWeek: 1, exerciseId: 'ex-5-1', targetSets: 3, targetReps: 12, targetLoadKg: 20, order: 3 },
+    { id: 'sch-a5', dayOfWeek: 1, exerciseId: 'ex-5-2', targetSets: 3, targetReps: 10, targetLoadKg: 18, order: 4 },
+
+    // Terça — Treino B: Costas e Bíceps
+    { id: 'sch-b1', dayOfWeek: 2, exerciseId: 'ex-2-1', targetSets: 4, targetReps: 10, targetLoadKg: 45, order: 0 },
+    { id: 'sch-b2', dayOfWeek: 2, exerciseId: 'ex-2-3', targetSets: 3, targetReps: 12, targetLoadKg: 40, order: 1 },
+    { id: 'sch-b3', dayOfWeek: 2, exerciseId: 'ex-2-5', targetSets: 3, targetReps: 10, targetLoadKg: 18, order: 2 },
+    { id: 'sch-b4', dayOfWeek: 2, exerciseId: 'ex-4-1', targetSets: 3, targetReps: 10, targetLoadKg: 20, order: 3 },
+    { id: 'sch-b5', dayOfWeek: 2, exerciseId: 'ex-4-3', targetSets: 3, targetReps: 12, targetLoadKg: 12, order: 4 },
+
+    // Quarta — Treino C: Quadríceps e Panturrilhas
+    { id: 'sch-c1', dayOfWeek: 3, exerciseId: 'ex-6-3', targetSets: 4, targetReps: 8, targetLoadKg: 50, order: 0 },
+    { id: 'sch-c2', dayOfWeek: 3, exerciseId: 'ex-6-2', targetSets: 3, targetReps: 12, targetLoadKg: 100, order: 1 },
+    { id: 'sch-c3', dayOfWeek: 3, exerciseId: 'ex-6-1', targetSets: 3, targetReps: 12, targetLoadKg: 40, order: 2 },
+    { id: 'sch-c4', dayOfWeek: 3, exerciseId: 'ex-9-1', targetSets: 4, targetReps: 15, targetLoadKg: 35, order: 3 },
+    { id: 'sch-c5', dayOfWeek: 3, exerciseId: 'ex-9-2', targetSets: 3, targetReps: 15, targetLoadKg: 25, order: 4 },
+
+    // Quinta — Treino D: Ombros e Antebraços
+    { id: 'sch-d1', dayOfWeek: 4, exerciseId: 'ex-3-1', targetSets: 4, targetReps: 10, targetLoadKg: 14, order: 0 },
+    { id: 'sch-d2', dayOfWeek: 4, exerciseId: 'ex-3-2', targetSets: 4, targetReps: 12, targetLoadKg: 8, order: 1 },
+    { id: 'sch-d3', dayOfWeek: 4, exerciseId: 'ex-3-5', targetSets: 3, targetReps: 15, targetLoadKg: 15, order: 2 },
+    { id: 'sch-d4', dayOfWeek: 4, exerciseId: 'ex-2-6', targetSets: 3, targetReps: 12, targetLoadKg: 20, order: 3 },
+    { id: 'sch-d5', dayOfWeek: 4, exerciseId: 'ex-11-1', targetSets: 3, targetReps: 15, targetLoadKg: 8, order: 4 },
+    { id: 'sch-d6', dayOfWeek: 4, exerciseId: 'ex-11-4', targetSets: 3, targetReps: 30, targetLoadKg: 18, order: 5 },
+
+    // Sexta — Treino E: Posterior, Glúteos e Abdômen
+    { id: 'sch-e1', dayOfWeek: 5, exerciseId: 'ex-7-3', targetSets: 4, targetReps: 10, targetLoadKg: 40, order: 0 },
+    { id: 'sch-e2', dayOfWeek: 5, exerciseId: 'ex-7-1', targetSets: 3, targetReps: 12, targetLoadKg: 35, order: 1 },
+    { id: 'sch-e3', dayOfWeek: 5, exerciseId: 'ex-8-1', targetSets: 4, targetReps: 10, targetLoadKg: 50, order: 2 },
+    { id: 'sch-e4', dayOfWeek: 5, exerciseId: 'ex-8-2', targetSets: 3, targetReps: 15, targetLoadKg: 40, order: 3 },
+    { id: 'sch-e5', dayOfWeek: 5, exerciseId: 'ex-10-2', targetSets: 3, targetReps: 15, targetLoadKg: 25, order: 4 },
+    { id: 'sch-e6', dayOfWeek: 5, exerciseId: 'ex-10-4', targetSets: 3, targetReps: 45, targetLoadKg: 0, order: 5 },
+  ];
+}
