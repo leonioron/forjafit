@@ -6,7 +6,7 @@ Este projeto já está configurado com **Capacitor** e com a pasta nativa `andro
 
 1. Instale as dependências e sincronize o build web com o projeto Android:
    ```bash
-   npm install
+   npm install --legacy-peer-deps
    npm run android:sync
    ```
 2. Para abrir no **Android Studio**:
