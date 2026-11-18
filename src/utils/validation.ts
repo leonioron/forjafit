@@ -96,9 +96,9 @@ export function validateMandatoryWorkoutFields(
     errors.reps = 'Obrigatório: informe um número inteiro entre 1 e 500 repetições.';
   }
 
-  const loadNum = Number(loadTrim);
-  if (loadTrim === '' || !Number.isFinite(loadNum) || loadNum < 0 || loadNum > 1000) {
-    errors.loadKg = 'Obrigatório: informe a carga em kg (use 0 para peso corporal).';
+  const loadNum = loadTrim === '' ? 0 : Number(loadTrim);
+  if (loadTrim !== '' && (!Number.isFinite(loadNum) || loadNum < 0 || loadNum > 1000)) {
+    errors.loadKg = 'Informe um valor válido entre 0 e 1000 kg.';
   }
 
   const valid = !errors.sets && !errors.reps && !errors.loadKg;

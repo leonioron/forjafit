@@ -34,9 +34,9 @@ export function CatalogView({
   });
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+    <div className="space-y-5 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+        <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white">Catálogo muscular</h1>
           <p className="text-sm text-slate-400">
             {exercises.length} exercícios ilustrados em 11 grupos musculares com execução e dicas.
@@ -54,7 +54,7 @@ export function CatalogView({
       </div>
 
       {/* Search & Muscle Group Filters */}
-      <div className="space-y-3">
+      <div className="space-y-3 min-w-0">
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
@@ -136,7 +136,7 @@ export function CatalogView({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
           {filtered.map((ex) => {
             const group = MUSCLE_GROUPS.find((g) => g.id === ex.muscleGroupId);
             return (
@@ -144,7 +144,7 @@ export function CatalogView({
                 key={ex.id}
                 type="button"
                 onClick={() => onSelectExercise(ex)}
-                className="text-left rounded-2xl bg-[#121824] border border-white/10 overflow-hidden hover:border-[#A3E635]/50 transition-colors flex flex-col group"
+                className="min-w-0 w-full text-left rounded-2xl bg-[#121824] border border-white/10 overflow-hidden hover:border-[#A3E635]/50 transition-colors flex flex-col group"
               >
                 <ExerciseImage
                   src={ex.imagePath}

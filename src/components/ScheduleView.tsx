@@ -46,12 +46,12 @@ export function ScheduleView({
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
+    <div className="space-y-6 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+        <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white">Agenda semanal ABCDE</h1>
           <p className="text-sm text-slate-400">
-            Configure os dias da semana, metas obrigatórias de séries, repetições e carga.
+            Configure os dias da semana, metas de séries, repetições e carga opcional.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export function ScheduleView({
       </div>
 
       {/* Day Tabs */}
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 w-full min-w-0">
         {ORDERED_WEEK_DAYS.map((day) => {
           const plan = dayPlans.find((d) => d.dayOfWeek === day);
           const count = scheduledItems.filter((i) => i.dayOfWeek === day).length;
@@ -101,7 +101,7 @@ export function ScheduleView({
               key={day}
               type="button"
               onClick={() => onSelectDay(day)}
-              className={`min-h-[56px] py-2 px-1 rounded-2xl border flex flex-col items-center justify-center gap-0.5 transition-colors ${
+              className={`min-w-0 min-h-[56px] py-2 px-0.5 sm:px-1 rounded-2xl border flex flex-col items-center justify-center gap-0.5 transition-colors ${
                 active
                   ? 'bg-[#A3E635] border-[#A3E635] text-[#090D14]'
                   : 'bg-[#121824] border-white/10 text-slate-300 hover:bg-[#1A2233]'
@@ -121,8 +121,8 @@ export function ScheduleView({
       </div>
 
       {/* Day Plan Header & Config */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-        <section className="p-4 rounded-2xl bg-[#121824] border border-white/10 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start min-w-0">
+        <section className="p-4 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0">
           <div>
             <p className="text-xs text-[#A3E635] font-medium mb-1">{DAY_NAMES_FULL[selectedDay]}</p>
             <label htmlFor="day-label-input" className="block text-xs text-slate-400 mb-1.5">
@@ -138,14 +138,14 @@ export function ScheduleView({
                   label: e.target.value,
                 })
               }
-              className="w-full min-h-[44px] px-3.5 rounded-xl bg-[#090D14] border border-white/15 text-sm text-white focus:outline-none focus:border-[#A3E635]"
+              className="w-full min-w-0 min-h-[44px] px-3.5 rounded-xl bg-[#090D14] border border-white/15 text-sm text-white focus:outline-none focus:border-[#A3E635]"
             />
           </div>
 
-          <div className="flex items-center justify-between py-2 border-t border-white/10">
-            <div>
+          <div className="flex items-center justify-between gap-3 py-2 border-t border-white/10">
+            <div className="min-w-0">
               <p className="text-sm font-medium text-white">Dia de descanso</p>
-              <p className="text-xs text-slate-400">Oculta botão de adicionar na tela Hoje</p>
+              <p className="text-xs text-slate-400">Indica dia de recuperação na tela Hoje</p>
             </div>
             <button
               type="button"
@@ -180,7 +180,7 @@ export function ScheduleView({
         </section>
 
         {/* Scheduled Items List */}
-        <section className="lg:col-span-2 space-y-3">
+        <section className="lg:col-span-2 space-y-3 min-w-0">
           {dayItems.length === 0 ? (
             <div className="p-8 rounded-2xl bg-[#121824] border border-white/10 text-center space-y-3">
               <p className="text-sm text-slate-300">
@@ -202,9 +202,9 @@ export function ScheduleView({
               return (
                 <div
                   key={item.id}
-                  className="p-3.5 rounded-2xl bg-[#121824] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="p-3.5 rounded-2xl bg-[#121824] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0 overflow-hidden"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <button
                       type="button"
                       onClick={() => onOpenDetail(ex)}
@@ -214,11 +214,11 @@ export function ScheduleView({
                       <ExerciseImage src={ex.imagePath} alt={ex.name} aspectClass="w-20 h-14" />
                     </button>
 
-                    <div className="min-w-0 space-y-1">
+                    <div className="min-w-0 flex-1 space-y-1">
                       <button
                         type="button"
                         onClick={() => onOpenDetail(ex)}
-                        className="text-left block w-full"
+                        className="text-left block w-full min-w-0"
                       >
                         <h3 className="text-sm sm:text-base font-semibold text-white hover:text-[#A3E635] truncate">
                           {idx + 1}. {ex.name}
@@ -227,8 +227,9 @@ export function ScheduleView({
                       <p className="text-xs text-slate-400 truncate">
                         {ex.primaryMuscle} · {ex.equipment}
                       </p>
-                      <p className="text-xs font-mono text-[#A3E635] tabular-nums">
-                        {item.targetSets} séries × {item.targetReps} reps · {formatKg(item.targetLoadKg)}
+                      <p className="text-xs font-mono text-[#A3E635] tabular-nums truncate">
+                        {item.targetSets} séries × {item.targetReps} reps
+                        {item.targetLoadKg > 0 ? ` · ${formatKg(item.targetLoadKg)}` : ''}
                       </p>
                     </div>
                   </div>

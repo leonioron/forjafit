@@ -227,18 +227,18 @@ export function ReportsView({
   const polylineStr = linePoints.map((p) => `${p.x},${p.y}`).join(' ');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Header & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
+        <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white">Relatórios e backup</h1>
           <p className="text-sm text-slate-400">
             Acompanhe frequência, volume por grupo muscular, evolução de carga e porte seus dados.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-[#121824] border border-white/10">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <div className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[#121824] border border-white/10 max-w-full">
             {(
               [
                 { id: '7d', label: '7 dias' },
@@ -301,9 +301,9 @@ export function ReportsView({
       </section>
 
       {/* Charts Grid */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
         {/* Chart 1: Daily Volume */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between gap-2">
             <div>
               <h2 className="text-base font-semibold text-white">Volume por dia de treino</h2>
@@ -358,7 +358,7 @@ export function ReportsView({
         </div>
 
         {/* Chart 2: Muscle Group Distribution */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4">
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
           <div>
             <h2 className="text-base font-semibold text-white">Distribuição por grupo muscular</h2>
             <p className="text-xs text-slate-400">Exercícios concluídos e séries acumuladas</p>
@@ -395,11 +395,11 @@ export function ReportsView({
       </section>
 
       {/* Chart 3: Exercise Load Progression */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#A3E635]" />
-            <div>
+      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <TrendingUp className="w-4 h-4 text-[#A3E635] shrink-0" />
+            <div className="min-w-0">
               <h2 className="text-base font-semibold text-white">Evolução de carga por exercício</h2>
               <p className="text-xs text-slate-400">Histórico de carga executada (kg)</p>
             </div>
@@ -409,7 +409,7 @@ export function ReportsView({
             aria-label="Selecionar exercício para gráfico de evolução"
             value={activeProgressionId}
             onChange={(e) => setSelectedProgressionExerciseId(e.target.value)}
-            className="min-h-[44px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-xs font-medium text-white focus:outline-none focus:border-[#A3E635] max-w-full sm:max-w-xs"
+            className="min-h-[44px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-xs font-medium text-white focus:outline-none focus:border-[#A3E635] w-full sm:w-auto sm:max-w-xs min-w-0"
           >
             {loggedExercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
@@ -638,7 +638,7 @@ export function ReportsView({
       </section>
 
       {/* Recent Logs Table */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-3">
+      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-3 min-w-0 overflow-hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-white">Histórico detalhado</h2>
           <span className="text-xs font-mono text-slate-400 tabular-nums">
@@ -678,10 +678,10 @@ export function ReportsView({
                         {log.sets}×{log.reps}
                       </td>
                       <td className="py-3 pr-3 font-mono text-slate-200 text-right tabular-nums whitespace-nowrap">
-                        {formatKg(log.loadKg)}
+                        {log.loadKg > 0 ? formatKg(log.loadKg) : '—'}
                       </td>
                       <td className="py-3 pr-3 font-mono text-[#A3E635] text-right tabular-nums whitespace-nowrap">
-                        {formatVolumeKg(log.volumeKg)}
+                        {log.volumeKg > 0 ? formatVolumeKg(log.volumeKg) : '—'}
                       </td>
                       <td className="py-3 text-right">
                         <button

@@ -96,17 +96,17 @@ export function ScheduleTargetModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 pt-[max(32px,env(safe-area-inset-top))] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm overflow-x-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="schedule-modal-title"
     >
-      <div className="w-full md:max-w-xl bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="w-full max-w-full md:max-w-xl min-w-0 bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-full flex flex-col overflow-hidden">
         <div className="md:hidden w-10 h-1.5 bg-slate-700 rounded-full mx-auto mt-3 shrink-0" />
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
-          <div>
-            <p className="text-xs text-[#A3E635] font-medium">{DAY_NAMES_FULL[dayOfWeek]}</p>
-            <h2 id="schedule-modal-title" className="text-lg font-bold text-white">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 shrink-0 min-w-0">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-[#A3E635] font-medium truncate">{DAY_NAMES_FULL[dayOfWeek]}</p>
+            <h2 id="schedule-modal-title" className="text-base sm:text-lg font-bold text-white truncate">
               {editingItem ? 'Editar metas do exercício' : 'Adicionar exercício ao dia'}
             </h2>
           </div>
@@ -114,13 +114,13 @@ export function ScheduleTargetModal({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+            className="min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 py-4 space-y-4 min-w-0">
           {!editingItem && (
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-2">
@@ -212,9 +212,9 @@ export function ScheduleTargetModal({
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label htmlFor="sch-sets" className="block text-xs font-medium text-slate-300 mb-1">
+          <div className="grid grid-cols-3 gap-2.5 min-w-0">
+            <div className="min-w-0">
+              <label htmlFor="sch-sets" className="block text-xs font-medium text-slate-300 mb-1 truncate">
                 Séries <span className="text-red-400">*</span>
               </label>
               <input
@@ -229,11 +229,11 @@ export function ScheduleTargetModal({
                   setSets(e.target.value);
                   setErrors((p) => ({ ...p, sets: undefined }));
                 }}
-                className="w-full min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="w-full min-w-0 min-h-[46px] px-2.5 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
             </div>
-            <div>
-              <label htmlFor="sch-reps" className="block text-xs font-medium text-slate-300 mb-1">
+            <div className="min-w-0">
+              <label htmlFor="sch-reps" className="block text-xs font-medium text-slate-300 mb-1 truncate">
                 Repetições <span className="text-red-400">*</span>
               </label>
               <input
@@ -248,12 +248,12 @@ export function ScheduleTargetModal({
                   setReps(e.target.value);
                   setErrors((p) => ({ ...p, reps: undefined }));
                 }}
-                className="w-full min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="w-full min-w-0 min-h-[46px] px-2.5 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
             </div>
-            <div>
-              <label htmlFor="sch-load" className="block text-xs font-medium text-slate-300 mb-1">
-                Carga (kg) <span className="text-red-400">*</span>
+            <div className="min-w-0">
+              <label htmlFor="sch-load" className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                Carga (kg)
               </label>
               <input
                 id="sch-load"
@@ -262,13 +262,13 @@ export function ScheduleTargetModal({
                 step="0.5"
                 min={0}
                 max={1000}
-                required
+                placeholder="0"
                 value={loadKg}
                 onChange={(e) => {
                   setLoadKg(e.target.value);
                   setErrors((p) => ({ ...p, loadKg: undefined }));
                 }}
-                className="w-full min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="w-full min-w-0 min-h-[46px] px-2.5 rounded-xl bg-[#090D14] border border-white/15 text-base font-mono text-white placeholder:text-slate-600 tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
             </div>
           </div>

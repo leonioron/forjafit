@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Minus, Plus, X, AlertCircle, Trash2 } from 'lucide-react';
 import { Exercise, MandatoryFieldErrors, WorkoutLog } from '../types/workout';
-import { formatDateBR, formatVolumeKg, validateMandatoryWorkoutFields } from '../utils/validation';
+import { formatDateBR, validateMandatoryWorkoutFields } from '../utils/validation';
 import { ExerciseImage } from './ExerciseImage';
 
 interface CompleteWorkoutSheetProps {
@@ -38,7 +38,8 @@ export function CompleteWorkoutSheet({
     if (isOpen && exercise) {
       setSets(String(existingLog ? existingLog.sets : defaultSets));
       setReps(String(existingLog ? existingLog.reps : defaultReps));
-      setLoadKg(String(existingLog ? existingLog.loadKg : defaultLoadKg));
+      const initialLoad = existingLog ? existingLog.loadKg : defaultLoadKg;
+      setLoadKg(initialLoad > 0 ? String(initialLoad) : '');
       setErrors({});
     }
   }, [isOpen, exercise, defaultSets, defaultReps, defaultLoadKg, existingLog]);
@@ -54,7 +55,7 @@ export function CompleteWorkoutSheet({
     setter: (v: string) => void
   ) => {
     const parsed = Number(current.replace(',', '.'));
-    const base = Number.isFinite(parsed) ? parsed : min;
+    const base = current.trim() !== '' && Number.isFinite(parsed) ? parsed : min;
     const next = Math.max(min, Math.min(max, base + delta));
     setter(allowDecimal ? String(Math.round(next * 10) / 10) : String(Math.round(next)));
   };
@@ -69,27 +70,22 @@ export function CompleteWorkoutSheet({
     onConfirm(res.parsed);
   };
 
-  const previewSets = Number(sets) || 0;
-  const previewReps = Number(reps) || 0;
-  const previewLoad = Number(loadKg.replace(',', '.')) || 0;
-  const previewVolume = Math.max(0, previewSets * previewReps * previewLoad);
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm"
+      className="fixed inset-0 z-50 pt-[max(32px,env(safe-area-inset-top))] flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm overflow-x-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="complete-sheet-title"
     >
-      <div className="w-full md:max-w-lg bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="w-full max-w-full md:max-w-lg min-w-0 bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-full flex flex-col overflow-hidden">
         <div className="md:hidden w-10 h-1.5 bg-slate-700 rounded-full mx-auto mt-3 shrink-0" />
 
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/10 shrink-0">
-          <div className="min-w-0">
-            <p className="text-xs font-mono text-[#A3E635] tabular-nums">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 shrink-0 min-w-0">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-mono text-[#A3E635] tabular-nums truncate">
               {existingLog ? 'Editar registro' : 'Registrar conclusão'} · {formatDateBR(dateISO)}
             </p>
-            <h2 id="complete-sheet-title" className="text-lg font-bold text-white truncate">
+            <h2 id="complete-sheet-title" className="text-base sm:text-lg font-bold text-white truncate">
               {exercise.name}
             </h2>
           </div>
@@ -103,32 +99,32 @@ export function CompleteWorkoutSheet({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-5">
-          <div className="flex items-center gap-3">
+        <form onSubmit={handleSubmit} className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 py-4 space-y-4 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <ExerciseImage
               src={exercise.imagePath}
               alt={exercise.name}
-              aspectClass="w-24 h-16 shrink-0"
+              aspectClass="w-20 h-14 sm:w-24 sm:h-16 shrink-0"
               className="rounded-xl border border-white/10"
             />
-            <div className="min-w-0 text-xs text-slate-400 space-y-1">
+            <div className="min-w-0 flex-1 text-xs text-slate-400 space-y-1">
               <p className="text-slate-200 font-medium truncate">{exercise.primaryMuscle}</p>
               <p className="truncate">{exercise.equipment}</p>
-              <p className="text-slate-400">Todos os 3 campos abaixo são obrigatórios.</p>
+              <p className="text-slate-400">Informe séries e repetições para registrar.</p>
             </div>
           </div>
 
           {/* Séries */}
-          <div>
+          <div className="min-w-0">
             <label htmlFor="log-sets" className="block text-sm font-medium text-slate-200 mb-1.5">
               Séries executadas <span className="text-red-400">*</span>
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <button
                 type="button"
                 onClick={() => stepValue(sets, -1, 1, 50, false, setSets)}
                 aria-label="Diminuir séries"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -144,13 +140,13 @@ export function CompleteWorkoutSheet({
                   setSets(e.target.value);
                   if (errors.sets) setErrors((prev) => ({ ...prev, sets: undefined }));
                 }}
-                className="flex-1 min-h-[46px] px-4 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="flex-1 min-w-0 w-0 min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
               <button
                 type="button"
                 onClick={() => stepValue(sets, 1, 1, 50, false, setSets)}
                 aria-label="Aumentar séries"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -164,16 +160,16 @@ export function CompleteWorkoutSheet({
           </div>
 
           {/* Repetições */}
-          <div>
+          <div className="min-w-0">
             <label htmlFor="log-reps" className="block text-sm font-medium text-slate-200 mb-1.5">
               Repetições por série <span className="text-red-400">*</span>
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <button
                 type="button"
                 onClick={() => stepValue(reps, -1, 1, 500, false, setReps)}
                 aria-label="Diminuir repetições"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -189,13 +185,13 @@ export function CompleteWorkoutSheet({
                   setReps(e.target.value);
                   if (errors.reps) setErrors((prev) => ({ ...prev, reps: undefined }));
                 }}
-                className="flex-1 min-h-[46px] px-4 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="flex-1 min-w-0 w-0 min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
               <button
                 type="button"
                 onClick={() => stepValue(reps, 1, 1, 500, false, setReps)}
                 aria-label="Aumentar repetições"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -208,20 +204,20 @@ export function CompleteWorkoutSheet({
             )}
           </div>
 
-          {/* Carga (kg) */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="log-load" className="text-sm font-medium text-slate-200">
-                Carga utilizada (kg) <span className="text-red-400">*</span>
+          {/* Carga (kg) — opcional */}
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <label htmlFor="log-load" className="text-sm font-medium text-slate-200 truncate">
+                Carga utilizada (kg)
               </label>
-              <span className="text-xs text-slate-400">Use 0 para peso corporal</span>
+              <span className="text-xs text-slate-400 shrink-0">Opcional</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <button
                 type="button"
                 onClick={() => stepValue(loadKg, -2.5, 0, 1000, true, setLoadKg)}
                 aria-label="Diminuir carga em 2,5 kg"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -232,19 +228,19 @@ export function CompleteWorkoutSheet({
                 step="0.5"
                 min={0}
                 max={1000}
-                required
+                placeholder="0"
                 value={loadKg}
                 onChange={(e) => {
                   setLoadKg(e.target.value);
                   if (errors.loadKg) setErrors((prev) => ({ ...prev, loadKg: undefined }));
                 }}
-                className="flex-1 min-h-[46px] px-4 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                className="flex-1 min-w-0 w-0 min-h-[46px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-center text-lg font-mono font-semibold text-white placeholder:text-slate-600 tabular-nums focus:outline-none focus:border-[#A3E635]"
               />
               <button
                 type="button"
                 onClick={() => stepValue(loadKg, 2.5, 0, 1000, true, setLoadKg)}
                 aria-label="Aumentar carga em 2,5 kg"
-                className="min-h-[46px] min-w-[46px] flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
+                className="min-h-[46px] min-w-[46px] shrink-0 flex items-center justify-center rounded-xl bg-[#1A2233] border border-white/10 text-slate-200 active:scale-95 transition-transform"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -257,14 +253,7 @@ export function CompleteWorkoutSheet({
             )}
           </div>
 
-          <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-[#090D14] border border-white/10">
-            <span className="text-xs text-slate-400">Volume total calculado</span>
-            <span className="text-sm font-mono font-semibold text-[#A3E635] tabular-nums">
-              {formatVolumeKg(previewVolume)}
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2.5 pt-1 pb-safe">
+          <div className="flex flex-col sm:flex-row gap-2.5 pt-2 pb-safe">
             {existingLog && onRemoveCompletion && (
               <button
                 type="button"

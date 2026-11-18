@@ -67,20 +67,20 @@ export function ExerciseDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 pt-[max(32px,env(safe-area-inset-top))] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm overflow-x-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="detail-modal-title"
     >
-      <div className="w-full md:max-w-2xl bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="w-full max-w-full md:max-w-2xl min-w-0 bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-full flex flex-col overflow-hidden">
         <div className="md:hidden w-10 h-1.5 bg-slate-700 rounded-full mx-auto mt-3 shrink-0" />
 
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-white/10 shrink-0">
-          <div className="min-w-0">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 shrink-0 min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs text-slate-400 truncate">
               {exercise.code} · {muscleGroup?.name || exercise.muscleGroupId}
             </p>
-            <h2 id="detail-modal-title" className="text-lg md:text-xl font-bold text-white truncate">
+            <h2 id="detail-modal-title" className="text-base sm:text-lg md:text-xl font-bold text-white truncate">
               {exercise.name}
             </h2>
           </div>
@@ -94,7 +94,7 @@ export function ExerciseDetailModal({
           </button>
         </div>
 
-        <div className="overflow-y-auto px-5 py-4 space-y-5">
+        <div className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 py-4 space-y-5 min-w-0">
           {/* Image switch: Execution photo vs Group Anatomy diagram */}
           <div className="space-y-2.5">
             {muscleGroup && (
@@ -197,9 +197,9 @@ export function ExerciseDetailModal({
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
-                <div>
-                  <label htmlFor="detail-sets" className="block text-xs font-medium text-slate-300 mb-1">
+              <div className="grid grid-cols-3 gap-2.5 min-w-0">
+                <div className="min-w-0">
+                  <label htmlFor="detail-sets" className="block text-xs font-medium text-slate-300 mb-1 truncate">
                     Séries <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -214,11 +214,11 @@ export function ExerciseDetailModal({
                       setSets(e.target.value);
                       setErrors((p) => ({ ...p, sets: undefined }));
                     }}
-                    className="w-full min-h-[44px] px-3 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                    className="w-full min-w-0 min-h-[44px] px-2.5 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
                   />
                 </div>
-                <div>
-                  <label htmlFor="detail-reps" className="block text-xs font-medium text-slate-300 mb-1">
+                <div className="min-w-0">
+                  <label htmlFor="detail-reps" className="block text-xs font-medium text-slate-300 mb-1 truncate">
                     Reps <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -233,12 +233,12 @@ export function ExerciseDetailModal({
                       setReps(e.target.value);
                       setErrors((p) => ({ ...p, reps: undefined }));
                     }}
-                    className="w-full min-h-[44px] px-3 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                    className="w-full min-w-0 min-h-[44px] px-2.5 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
                   />
                 </div>
-                <div>
-                  <label htmlFor="detail-load" className="block text-xs font-medium text-slate-300 mb-1">
-                    Carga (kg) <span className="text-red-400">*</span>
+                <div className="min-w-0">
+                  <label htmlFor="detail-load" className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                    Carga (kg)
                   </label>
                   <input
                     id="detail-load"
@@ -247,13 +247,13 @@ export function ExerciseDetailModal({
                     step="0.5"
                     min={0}
                     max={1000}
-                    required
+                    placeholder="0"
                     value={loadKg}
                     onChange={(e) => {
                       setLoadKg(e.target.value);
                       setErrors((p) => ({ ...p, loadKg: undefined }));
                     }}
-                    className="w-full min-h-[44px] px-3 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white tabular-nums focus:outline-none focus:border-[#A3E635]"
+                    className="w-full min-w-0 min-h-[44px] px-2.5 rounded-xl bg-[#121824] border border-white/15 text-sm font-mono text-white placeholder:text-slate-600 tabular-nums focus:outline-none focus:border-[#A3E635]"
                   />
                 </div>
               </div>

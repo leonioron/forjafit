@@ -84,28 +84,28 @@ export function CustomExerciseModal({ isOpen, onClose, onCreate }: CustomExercis
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 pt-[max(32px,env(safe-area-inset-top))] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm overflow-x-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="custom-ex-title"
     >
-      <div className="w-full md:max-w-lg bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="w-full max-w-full md:max-w-lg min-w-0 bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-full flex flex-col overflow-hidden">
         <div className="md:hidden w-10 h-1.5 bg-slate-700 rounded-full mx-auto mt-3 shrink-0" />
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
-          <h2 id="custom-ex-title" className="text-lg font-bold text-white">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 shrink-0 min-w-0">
+          <h2 id="custom-ex-title" className="text-base sm:text-lg font-bold text-white truncate min-w-0 flex-1">
             Novo exercício personalizado
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+            className="min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 py-4 space-y-4 min-w-0">
           {error && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-2 text-xs text-red-300">
               <AlertCircle className="w-4 h-4 shrink-0" />

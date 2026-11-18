@@ -300,10 +300,10 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D14] text-slate-100 flex flex-col">
-      {/* Compact Header — 3 zones on desktop, compact 52px bar on mobile */}
-      <header className="sticky top-0 z-30 bg-[#090D14]/90 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-13 md:h-16 flex items-center justify-between gap-8">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#090D14] text-slate-100 flex flex-col">
+      {/* Compact Header — 32px top safe clearance for Android notification bar */}
+      <header className="sticky top-0 z-30 bg-[#090D14]/95 backdrop-blur-md border-b border-white/10 pt-[max(32px,env(safe-area-inset-top))]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-13 md:h-16 flex items-center justify-between gap-3 sm:gap-8">
           <button
             type="button"
             onClick={() => setActiveTab('today')}
@@ -336,7 +336,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleQuickExportJSON}
-              className="min-h-[40px] px-3.5 rounded-xl bg-[#121824] border border-white/10 text-xs font-semibold text-white hover:border-[#A3E635]/50 flex items-center gap-2 transition-colors whitespace-nowrap shrink-0"
+              className="min-h-[40px] px-3 sm:px-3.5 rounded-xl bg-[#121824] border border-white/10 text-xs font-semibold text-white hover:border-[#A3E635]/50 flex items-center gap-2 transition-colors whitespace-nowrap shrink-0"
             >
               <Download className="w-3.5 h-3.5 text-[#A3E635]" />
               <span>Exportar JSON</span>
@@ -346,7 +346,7 @@ export default function App() {
       </header>
 
       {/* Main Content Viewport */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-24 md:pb-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-5 pb-24 md:pb-12 min-w-0">
         {!isLoaded ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-16 rounded-2xl bg-[#121824]" />
@@ -366,13 +366,6 @@ export default function App() {
                   setCompleteTarget({ item, exercise, existingLog })
                 }
                 onOpenDetail={(ex) => setDetailExercise(ex)}
-                onGoToSchedule={(day) => {
-                  setScheduleDay(day);
-                  setActiveTab('schedule');
-                }}
-                onQuickAddExercise={(day) =>
-                  setScheduleModalState({ open: true, day, editingItem: null })
-                }
               />
             )}
 
@@ -486,7 +479,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#A3E635] text-[#090D14] text-xs font-semibold shadow-lg whitespace-nowrap"
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-2rem)] px-4 py-2.5 rounded-xl bg-[#A3E635] text-[#090D14] text-xs font-semibold shadow-lg text-center"
         >
           {toast}
         </div>
