@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, BookOpen, CalendarCheck2, CalendarDays, Download } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarCheck2, CalendarDays } from 'lucide-react';
 import { CatalogView } from './components/CatalogView';
 import { CompleteWorkoutSheet } from './components/CompleteWorkoutSheet';
 import { CustomExerciseModal } from './components/CustomExerciseModal';
@@ -10,12 +10,10 @@ import { ScheduleView } from './components/ScheduleView';
 import { TodayView } from './components/TodayView';
 import { createDefaultScheduleItems, DEFAULT_DAY_PLANS, DEFAULT_EXERCISES } from './data/catalog';
 import {
-  buildBackupPayload,
   createInitialAppState,
   loadAppState,
   mergeAppStates,
   saveAppState,
-  triggerFileDownload,
 } from './services/storage';
 import {
   AppDataState,
@@ -256,14 +254,6 @@ export default function App() {
     showToast('Exercício personalizado adicionado ao catálogo.');
   };
 
-  const handleDeleteLog = (logId: string) => {
-    updateAndPersist((prev) => ({
-      ...prev,
-      logs: prev.logs.filter((l) => l.id !== logId),
-    }));
-    showToast('Registro excluído do histórico.');
-  };
-
   const handleImportBackup = (payload: BackupPayload, mode: 'merge' | 'replace') => {
     updateAndPersist((prev) => {
       if (mode === 'replace') {
@@ -280,18 +270,6 @@ export default function App() {
     showToast(mode === 'replace' ? 'Backup restaurado.' : 'Dados mesclados com sucesso.');
   };
 
-  const handleQuickExportJSON = async () => {
-    const payload = buildBackupPayload(appState);
-    const ok = await triggerFileDownload(
-      JSON.stringify(payload, null, 2),
-      `forjafit-backup-${getTodayISO()}.json`,
-      'application/json'
-    );
-    if (ok) {
-      showToast('Backup JSON exportado.');
-    }
-  };
-
   const navItems: { id: TabId; label: string; icon: typeof CalendarCheck2 }[] = [
     { id: 'today', label: 'Hoje', icon: CalendarCheck2 },
     { id: 'schedule', label: 'Agenda', icon: CalendarDays },
@@ -300,9 +278,15 @@ export default function App() {
   ];
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#090D14] text-slate-100 flex flex-col">
-      {/* Compact Header — 32px top safe clearance for Android notification bar */}
-      <header className="sticky top-0 z-30 bg-[#090D14]/95 backdrop-blur-md border-b border-white/10 pt-[max(32px,env(safe-area-inset-top))]">
+    <div className="min-h-screen w-full overflow-x-clip bg-[#090D14] text-slate-100 flex flex-col pt-safe-top">
+      {/* 32px top margin/shield across all screens for Android status & notification bar */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 z-40 h-safe-top bg-[#090D14] pointer-events-none"
+      />
+
+      {/* Compact Header */}
+      <header className="sticky top-safe-top z-30 bg-[#090D14]/95 backdrop-blur-md border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-13 md:h-16 flex items-center justify-between gap-3 sm:gap-8">
           <button
             type="button"
@@ -331,17 +315,6 @@ export default function App() {
               );
             })}
           </nav>
-
-          <div className="flex items-center shrink-0">
-            <button
-              type="button"
-              onClick={handleQuickExportJSON}
-              className="min-h-[40px] px-3 sm:px-3.5 rounded-xl bg-[#121824] border border-white/10 text-xs font-semibold text-white hover:border-[#A3E635]/50 flex items-center gap-2 transition-colors whitespace-nowrap shrink-0"
-            >
-              <Download className="w-3.5 h-3.5 text-[#A3E635]" />
-              <span>Exportar JSON</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -401,9 +374,7 @@ export default function App() {
             {activeTab === 'reports' && (
               <ReportsView
                 state={appState}
-                exercises={allExercises}
                 exercisesMap={exercisesMap}
-                onDeleteLog={handleDeleteLog}
                 onImportBackup={handleImportBackup}
                 onNotify={showToast}
               />

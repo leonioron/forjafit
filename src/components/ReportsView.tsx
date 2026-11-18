@@ -2,12 +2,12 @@ import React, { useMemo, useState } from 'react';
 import {
   AlertCircle,
   Check,
+  CheckCircle2,
   Copy,
   Download,
   FileSpreadsheet,
-  Trash2,
-  TrendingUp,
   Upload,
+  X,
 } from 'lucide-react';
 import { MUSCLE_GROUPS } from '../data/catalog';
 import { AppDataState, BackupPayload, Exercise, WorkoutLog } from '../types/workout';
@@ -18,19 +18,19 @@ import {
   triggerFileDownload,
 } from '../services/storage';
 import {
+  DAY_NAMES_FULL,
   formatDateBR,
   formatKg,
   formatShortDateBR,
-  formatVolumeKg,
+  getDayOfWeekFromISO,
   getTodayISO,
   parseLocalISODate,
 } from '../utils/validation';
+import { ExerciseImage } from './ExerciseImage';
 
 interface ReportsViewProps {
   state: AppDataState;
-  exercises: Exercise[];
   exercisesMap: Map<string, Exercise>;
-  onDeleteLog: (logId: string) => void;
   onImportBackup: (payload: BackupPayload, mode: 'merge' | 'replace') => void;
   onNotify: (message: string) => void;
 }
@@ -39,16 +39,13 @@ type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 
 export function ReportsView({
   state,
-  exercises,
   exercisesMap,
-  onDeleteLog,
   onImportBackup,
   onNotify,
 }: ReportsViewProps) {
   const [period, setPeriod] = useState<PeriodFilter>('30d');
   const [groupFilter, setGroupFilter] = useState<string>('all');
-  const [selectedProgressionExerciseId, setSelectedProgressionExerciseId] = useState<string>('');
-  const [activeBarDate, setActiveBarDate] = useState<string | null>(null);
+  const [selectedDayModalDate, setSelectedDayModalDate] = useState<string | null>(null);
 
   // Import/Export UI states
   const [showJsonTextModal, setShowJsonTextModal] = useState(false);
@@ -76,45 +73,61 @@ export function ReportsView({
       .sort((a, b) => b.date.localeCompare(a.date) || b.completedAt.localeCompare(a.completedAt));
   }, [state.logs, period, groupFilter]);
 
-  const kpis = useMemo(() => {
-    const uniqueDays = new Set(filteredLogs.map((l) => l.date)).size;
-    const totalExercises = filteredLogs.length;
-    const totalVolume = filteredLogs.reduce((sum, l) => sum + l.volumeKg, 0);
-    const maxLoad = filteredLogs.reduce((max, l) => Math.max(max, l.loadKg), 0);
-    return { uniqueDays, totalExercises, totalVolume, maxLoad };
-  }, [filteredLogs]);
-
-  // Daily volume bar series (up to 14 most recent active days in filter)
-  const dailyVolumeSeries = useMemo(() => {
-    const byDate = new Map<string, { date: string; volume: number; count: number }>();
+  // Daily exercise count bar series (up to 14 most recent active days in filter)
+  const dailyExerciseSeries = useMemo(() => {
+    const byDate = new Map<string, WorkoutLog[]>();
     for (const log of filteredLogs) {
-      const existing = byDate.get(log.date) || { date: log.date, volume: 0, count: 0 };
-      existing.volume += log.volumeKg;
-      existing.count += 1;
-      byDate.set(log.date, existing);
+      const list = byDate.get(log.date) || [];
+      list.push(log);
+      byDate.set(log.date, list);
     }
-    return Array.from(byDate.values())
+
+    return Array.from(byDate.entries())
+      .map(([date, logsForDate]) => {
+        const dayOfWeek = getDayOfWeekFromISO(date);
+        const scheduledForDay = state.scheduledItems.filter((item) => item.dayOfWeek === dayOfWeek);
+        const totalScheduled = scheduledForDay.length;
+        const completedScheduledCount =
+          totalScheduled > 0
+            ? scheduledForDay.filter((item) =>
+                logsForDate.some(
+                  (l) => l.scheduledItemId === item.id || l.exerciseId === item.exerciseId
+                )
+              ).length
+            : logsForDate.length;
+
+        const isComplete =
+          totalScheduled === 0
+            ? logsForDate.length > 0
+            : completedScheduledCount >= totalScheduled;
+
+        return {
+          date,
+          dayOfWeek,
+          count: logsForDate.length,
+          totalScheduled,
+          completedScheduledCount,
+          isComplete,
+          logs: logsForDate,
+        };
+      })
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-14);
-  }, [filteredLogs]);
+  }, [filteredLogs, state.scheduledItems]);
 
-  // Muscle group breakdown
+  // Muscle group breakdown (only exercise count)
   const muscleDistribution = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; count: number; sets: number; volume: number }>();
+    const map = new Map<string, { id: string; name: string; count: number }>();
     for (const g of MUSCLE_GROUPS) {
-      map.set(g.id, { id: g.id, name: g.shortName, count: 0, sets: 0, volume: 0 });
+      map.set(g.id, { id: g.id, name: g.shortName, count: 0 });
     }
     for (const log of filteredLogs) {
       const entry = map.get(log.muscleGroupId) || {
         id: log.muscleGroupId,
         name: log.muscleGroupId,
         count: 0,
-        sets: 0,
-        volume: 0,
       };
       entry.count += 1;
-      entry.sets += log.sets;
-      entry.volume += log.volumeKg;
       map.set(log.muscleGroupId, entry);
     }
     return Array.from(map.values())
@@ -122,28 +135,10 @@ export function ReportsView({
       .sort((a, b) => b.count - a.count);
   }, [filteredLogs]);
 
-  // Exercises available for progression chart
-  const loggedExercises = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const l of state.logs) {
-      counts.set(l.exerciseId, (counts.get(l.exerciseId) || 0) + 1);
-    }
-    const list = exercises.filter((ex) => counts.has(ex.id));
-    return list.length > 0 ? list : exercises.slice(0, 10);
-  }, [state.logs, exercises]);
-
-  const activeProgressionId =
-    selectedProgressionExerciseId && exercisesMap.has(selectedProgressionExerciseId)
-      ? selectedProgressionExerciseId
-      : loggedExercises[0]?.id || '';
-
-  const progressionPoints = useMemo(() => {
-    if (!activeProgressionId) return [];
-    return state.logs
-      .filter((l) => l.exerciseId === activeProgressionId)
-      .sort((a, b) => a.date.localeCompare(b.date) || a.completedAt.localeCompare(b.completedAt))
-      .slice(-16);
-  }, [state.logs, activeProgressionId]);
+  const selectedDayData = useMemo(() => {
+    if (!selectedDayModalDate) return null;
+    return dailyExerciseSeries.find((d) => d.date === selectedDayModalDate) || null;
+  }, [selectedDayModalDate, dailyExerciseSeries]);
 
   const handleExportJSON = async () => {
     const payload = buildBackupPayload(state);
@@ -200,31 +195,8 @@ export function ReportsView({
     }
   };
 
-  const maxDailyVolume = Math.max(1, ...dailyVolumeSeries.map((d) => d.volume));
+  const maxDailyCount = Math.max(1, ...dailyExerciseSeries.map((d) => d.count));
   const maxMuscleCount = Math.max(1, ...muscleDistribution.map((m) => m.count));
-
-  // SVG Line Chart geometry for progression
-  const chartW = 520;
-  const chartH = 160;
-  const padX = 28;
-  const padY = 20;
-  const minLoad = progressionPoints.length > 0 ? Math.min(...progressionPoints.map((p) => p.loadKg)) : 0;
-  const maxLoad = progressionPoints.length > 0 ? Math.max(...progressionPoints.map((p) => p.loadKg)) : 100;
-  const loadSpan = Math.max(1, maxLoad - minLoad);
-
-  const linePoints = progressionPoints.map((pt, i) => {
-    const x =
-      progressionPoints.length === 1
-        ? chartW / 2
-        : padX + (i / (progressionPoints.length - 1)) * (chartW - padX * 2);
-    const y =
-      progressionPoints.length === 1
-        ? chartH / 2
-        : chartH - padY - ((pt.loadKg - minLoad) / loadSpan) * (chartH - padY * 2);
-    return { x, y, pt };
-  });
-
-  const polylineStr = linePoints.map((p) => `${p.x},${p.y}`).join(' ');
 
   return (
     <div className="space-y-6 w-full min-w-0">
@@ -233,7 +205,7 @@ export function ReportsView({
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white">Relatórios e backup</h1>
           <p className="text-sm text-slate-400">
-            Acompanhe frequência, volume por grupo muscular, evolução de carga e porte seus dados.
+            Acompanhe exercícios treinados por dia, distribuição por grupo muscular e porte seus dados.
           </p>
         </div>
 
@@ -276,78 +248,66 @@ export function ReportsView({
         </div>
       </div>
 
-      {/* 4 KPI Summary Cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-4 rounded-2xl bg-[#121824] border border-white/10">
-          <p className="text-xs text-slate-400">Dias treinados</p>
-          <p className="text-2xl font-mono font-bold text-white tabular-nums mt-1">{kpis.uniqueDays}</p>
-        </div>
-        <div className="p-4 rounded-2xl bg-[#121824] border border-white/10">
-          <p className="text-xs text-slate-400">Exercícios concluídos</p>
-          <p className="text-2xl font-mono font-bold text-white tabular-nums mt-1">{kpis.totalExercises}</p>
-        </div>
-        <div className="p-4 rounded-2xl bg-[#121824] border border-white/10">
-          <p className="text-xs text-slate-400">Volume total</p>
-          <p className="text-2xl font-mono font-bold text-[#A3E635] tabular-nums mt-1">
-            {formatVolumeKg(kpis.totalVolume)}
-          </p>
-        </div>
-        <div className="p-4 rounded-2xl bg-[#121824] border border-white/10">
-          <p className="text-xs text-slate-400">Maior carga registrada</p>
-          <p className="text-2xl font-mono font-bold text-white tabular-nums mt-1">
-            {formatKg(kpis.maxLoad)}
-          </p>
-        </div>
-      </section>
-
       {/* Charts Grid */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
-        {/* Chart 1: Daily Volume */}
+        {/* Chart 1: Daily Exercises Count */}
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-base font-semibold text-white">Volume por dia de treino</h2>
-              <p className="text-xs text-slate-400">Toque em uma barra para ver detalhes</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold text-white">
+                Quantidade de exercícios treinados no dia
+              </h2>
+              <p className="text-xs text-slate-400">
+                Toque em uma barra para ver o resumo do dia
+              </p>
             </div>
-            {activeBarDate && (
-              <span className="text-xs font-mono text-[#A3E635] tabular-nums">
-                {formatShortDateBR(activeBarDate)} ·{' '}
-                {formatVolumeKg(dailyVolumeSeries.find((d) => d.date === activeBarDate)?.volume || 0)}
+            <div className="flex items-center gap-3 text-[11px] text-slate-300 shrink-0">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
+                <span>Dia completo</span>
               </span>
-            )}
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
+                <span>Parcial</span>
+              </span>
+            </div>
           </div>
 
-          {dailyVolumeSeries.length === 0 ? (
+          {dailyExerciseSeries.length === 0 ? (
             <div className="h-44 flex flex-col items-center justify-center text-center text-xs text-slate-400 border border-dashed border-white/10 rounded-xl p-4">
               Nenhum exercício concluído no período selecionado. Conclua atividades na aba Hoje para gerar gráficos.
             </div>
           ) : (
             <div className="h-48 flex items-end gap-1.5 sm:gap-2 pt-4">
-              {dailyVolumeSeries.map((d) => {
-                const heightPct = Math.max(8, Math.round((d.volume / maxDailyVolume) * 100));
-                const isSelected = activeBarDate === d.date;
+              {dailyExerciseSeries.map((d) => {
+                const heightPct = Math.max(12, Math.round((d.count / maxDailyCount) * 100));
+                const isSelected = selectedDayModalDate === d.date;
+                const barColorClass = d.isComplete
+                  ? isSelected
+                    ? 'bg-emerald-300'
+                    : 'bg-emerald-400/90 group-hover:bg-emerald-400'
+                  : isSelected
+                    ? 'bg-amber-300'
+                    : 'bg-amber-400/90 group-hover:bg-amber-400';
+
                 return (
                   <button
                     key={d.date}
                     type="button"
-                    onClick={() => setActiveBarDate(d.date)}
-                    className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group focus:outline-none"
-                    title={`${formatDateBR(d.date)}: ${formatVolumeKg(d.volume)} (${d.count} ex.)`}
+                    onClick={() => setSelectedDayModalDate(d.date)}
+                    className="flex-1 min-w-0 h-full flex flex-col items-center justify-end gap-1.5 group focus:outline-none"
+                    title={`${formatDateBR(d.date)}: ${d.count} exercício(s)`}
                   >
-                    <span className="text-[10px] font-mono text-slate-400 tabular-nums">
+                    <span className="text-[10px] font-mono text-slate-300 tabular-nums">
                       {d.count}
                     </span>
                     <div className="w-full flex-1 flex items-end">
                       <div
                         style={{ height: `${heightPct}%` }}
-                        className={`w-full rounded-t-lg transition-colors ${
-                          isSelected
-                            ? 'bg-[#A3E635]'
-                            : 'bg-[#A3E635]/65 group-hover:bg-[#A3E635]'
-                        }`}
+                        className={`w-full rounded-t-lg transition-colors ${barColorClass}`}
                       />
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 tabular-nums">
+                    <span className="text-[10px] font-mono text-slate-400 tabular-nums truncate max-w-full">
                       {formatShortDateBR(d.date)}
                     </span>
                   </button>
@@ -361,7 +321,7 @@ export function ReportsView({
         <div className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
           <div>
             <h2 className="text-base font-semibold text-white">Distribuição por grupo muscular</h2>
-            <p className="text-xs text-slate-400">Exercícios concluídos e séries acumuladas</p>
+            <p className="text-xs text-slate-400">Exercícios concluídos por grupo</p>
           </div>
 
           {muscleDistribution.length === 0 ? (
@@ -374,10 +334,10 @@ export function ReportsView({
                 const pct = Math.max(8, Math.round((m.count / maxMuscleCount) * 100));
                 return (
                   <div key={m.id} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-200">{m.name}</span>
-                      <span className="font-mono text-slate-400 tabular-nums">
-                        {m.count} ex. · {m.sets} séries · {formatVolumeKg(m.volume)}
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-medium text-slate-200 truncate">{m.name}</span>
+                      <span className="font-mono text-slate-400 tabular-nums shrink-0">
+                        {m.count} {m.count === 1 ? 'exercício' : 'exercícios'}
                       </span>
                     </div>
                     <div className="h-2.5 w-full rounded-full bg-[#090D14] overflow-hidden">
@@ -392,89 +352,6 @@ export function ReportsView({
             </div>
           )}
         </div>
-      </section>
-
-      {/* Chart 3: Exercise Load Progression */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-4 min-w-0 overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <TrendingUp className="w-4 h-4 text-[#A3E635] shrink-0" />
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold text-white">Evolução de carga por exercício</h2>
-              <p className="text-xs text-slate-400">Histórico de carga executada (kg)</p>
-            </div>
-          </div>
-
-          <select
-            aria-label="Selecionar exercício para gráfico de evolução"
-            value={activeProgressionId}
-            onChange={(e) => setSelectedProgressionExerciseId(e.target.value)}
-            className="min-h-[44px] px-3 rounded-xl bg-[#090D14] border border-white/15 text-xs font-medium text-white focus:outline-none focus:border-[#A3E635] w-full sm:w-auto sm:max-w-xs min-w-0"
-          >
-            {loggedExercises.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.code} · {ex.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {progressionPoints.length === 0 ? (
-          <div className="h-40 flex items-center justify-center text-center text-xs text-slate-400 border border-dashed border-white/10 rounded-xl p-4">
-            Ainda não há execuções registradas para este exercício.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="w-full overflow-x-auto">
-              <svg
-                viewBox={`0 0 ${chartW} ${chartH}`}
-                className="w-full min-w-[320px] h-44"
-                role="img"
-                aria-label="Gráfico de evolução de carga"
-              >
-                <line x1={padX} y1={padY} x2={chartW - padX} y2={padY} stroke="rgba(255,255,255,0.08)" />
-                <line
-                  x1={padX}
-                  y1={chartH - padY}
-                  x2={chartW - padX}
-                  y2={chartH - padY}
-                  stroke="rgba(255,255,255,0.12)"
-                />
-                {linePoints.length > 1 && (
-                  <polyline
-                    fill="none"
-                    stroke="#A3E635"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points={polylineStr}
-                  />
-                )}
-                {linePoints.map(({ x, y, pt }) => (
-                  <g key={pt.id}>
-                    <circle cx={x} cy={y} r="5" fill="#090D14" stroke="#A3E635" strokeWidth="2.5" />
-                    <text
-                      x={x}
-                      y={y - 10}
-                      textAnchor="middle"
-                      fill="#F8FAFC"
-                      fontSize="10"
-                      fontFamily="JetBrains Mono, monospace"
-                    >
-                      {pt.loadKg}kg
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-mono tabular-nums">
-              <span>Mínima: {formatKg(minLoad)}</span>
-              <span>Máxima: {formatKg(maxLoad)}</span>
-              <span>Última: {formatKg(progressionPoints[progressionPoints.length - 1].loadKg)}</span>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Export / Import Section */}
@@ -637,70 +514,108 @@ export function ReportsView({
         )}
       </section>
 
-      {/* Recent Logs Table */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-[#121824] border border-white/10 space-y-3 min-w-0 overflow-hidden">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Histórico detalhado</h2>
-          <span className="text-xs font-mono text-slate-400 tabular-nums">
-            {filteredLogs.length} registro(s)
-          </span>
-        </div>
+      {/* Modal resumo dos exercícios concluídos no dia */}
+      {selectedDayData && (
+        <div
+          className="fixed inset-0 z-50 pt-safe-top flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm overflow-x-clip"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="day-summary-modal-title"
+        >
+          <div className="w-full max-w-full md:max-w-lg min-w-0 bg-[#121824] border-t md:border border-white/10 rounded-t-3xl md:rounded-2xl max-h-full flex flex-col overflow-hidden">
+            <div className="md:hidden w-10 h-1.5 bg-slate-700 rounded-full mx-auto mt-3 shrink-0" />
 
-        {filteredLogs.length === 0 ? (
-          <p className="py-6 text-center text-xs text-slate-400">
-            Nenhum exercício concluído encontrado para os filtros aplicados.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 text-xs text-slate-400">
-                  <th className="py-2.5 pr-3 font-medium">Data</th>
-                  <th className="py-2.5 pr-3 font-medium">Exercício</th>
-                  <th className="py-2.5 pr-3 font-medium text-right">Séries×Reps</th>
-                  <th className="py-2.5 pr-3 font-medium text-right">Carga</th>
-                  <th className="py-2.5 pr-3 font-medium text-right">Volume</th>
-                  <th className="py-2.5 font-medium text-right">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-xs sm:text-sm">
-                {filteredLogs.slice(0, 50).map((log: WorkoutLog) => {
+            <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 shrink-0 min-w-0">
+              <div className="min-w-0 flex-1">
+                <p
+                  className={`text-xs font-medium truncate ${
+                    selectedDayData.isComplete ? 'text-emerald-400' : 'text-amber-400'
+                  }`}
+                >
+                  {DAY_NAMES_FULL[selectedDayData.dayOfWeek]} ·{' '}
+                  <span className="font-mono tabular-nums">{formatDateBR(selectedDayData.date)}</span>
+                </p>
+                <h2
+                  id="day-summary-modal-title"
+                  className="text-base sm:text-lg font-bold text-white truncate"
+                >
+                  Exercícios concluídos ({selectedDayData.count})
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDayModalDate(null)}
+                aria-label="Fechar resumo do dia"
+                className="min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto overflow-x-hidden px-4 sm:px-5 py-4 space-y-3 min-w-0">
+              <div
+                className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                  selectedDayData.isComplete
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>
+                  {selectedDayData.totalScheduled > 0
+                    ? selectedDayData.isComplete
+                      ? `Todos os ${selectedDayData.totalScheduled} exercícios programados para o dia foram concluídos.`
+                      : `Concluído parcialmente: ${selectedDayData.completedScheduledCount} de ${selectedDayData.totalScheduled} exercícios programados.`
+                    : `${selectedDayData.count} exercício(s) registrado(s) neste dia.`}
+                </span>
+              </div>
+
+              <div className="space-y-2.5">
+                {selectedDayData.logs.map((log) => {
                   const ex = exercisesMap.get(log.exerciseId);
                   return (
-                    <tr key={log.id} className="hover:bg-white/[0.02]">
-                      <td className="py-3 pr-3 font-mono text-slate-300 tabular-nums whitespace-nowrap">
-                        {formatShortDateBR(log.date)}
-                      </td>
-                      <td className="py-3 pr-3 font-medium text-white min-w-[140px]">
-                        {ex?.name || log.exerciseId}
-                      </td>
-                      <td className="py-3 pr-3 font-mono text-slate-200 text-right tabular-nums whitespace-nowrap">
-                        {log.sets}×{log.reps}
-                      </td>
-                      <td className="py-3 pr-3 font-mono text-slate-200 text-right tabular-nums whitespace-nowrap">
-                        {log.loadKg > 0 ? formatKg(log.loadKg) : '—'}
-                      </td>
-                      <td className="py-3 pr-3 font-mono text-[#A3E635] text-right tabular-nums whitespace-nowrap">
-                        {log.volumeKg > 0 ? formatVolumeKg(log.volumeKg) : '—'}
-                      </td>
-                      <td className="py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => onDeleteLog(log.id)}
-                          aria-label="Excluir registro"
-                          className="min-h-[38px] min-w-[38px] inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
+                    <div
+                      key={log.id}
+                      className="p-3 rounded-xl bg-[#090D14] border border-white/10 flex items-center gap-3 min-w-0"
+                    >
+                      {ex && (
+                        <ExerciseImage
+                          src={ex.imagePath}
+                          alt={ex.name}
+                          aspectClass="w-16 h-12 shrink-0"
+                          className="rounded-lg border border-white/10"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="text-sm font-semibold text-white truncate">
+                          {ex?.name || log.exerciseId}
+                        </p>
+                        {ex && (
+                          <p className="text-xs text-slate-400 truncate">{ex.primaryMuscle}</p>
+                        )}
+                        <p className="text-xs font-mono text-[#A3E635] tabular-nums">
+                          {log.sets} séries × {log.reps} reps
+                          {log.loadKg > 0 ? ` · ${formatKg(log.loadKg)}` : ''}
+                        </p>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            <div className="px-4 sm:px-5 py-3.5 border-t border-white/10 pb-safe shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedDayModalDate(null)}
+                className="w-full min-h-[46px] rounded-xl bg-[#1A2233] border border-white/10 text-sm font-semibold text-white hover:border-[#A3E635]/50"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
-        )}
-      </section>
+        </div>
+      )}
     </div>
   );
 }

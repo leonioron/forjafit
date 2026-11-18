@@ -72,7 +72,7 @@ export function CompleteWorkoutSheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 pt-[max(32px,env(safe-area-inset-top))] flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm overflow-x-hidden"
+      className="fixed inset-0 z-50 pt-safe-top flex items-end md:items-center justify-center bg-black/75 backdrop-blur-sm overflow-x-clip"
       role="dialog"
       aria-modal="true"
       aria-labelledby="complete-sheet-title"

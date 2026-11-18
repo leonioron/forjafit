@@ -10,6 +10,7 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --app-safe-top: max(32px, env(safe-area-inset-top, 0px));
   }
 
   html, body {
@@ -18,9 +19,8 @@
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
-    max-width: 100%;
   }
 
   h1, h2, h3, .font-display {
@@ -46,6 +46,19 @@
 ::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.22);
   border-radius: 9999px;
+}
+
+/* Safe area spacing (minimum 32px top margin for Android status/notification bar) */
+.h-safe-top {
+  height: var(--app-safe-top);
+}
+
+.pt-safe-top {
+  padding-top: var(--app-safe-top);
+}
+
+.top-safe-top {
+  top: var(--app-safe-top);
 }
 
 /* Safe area padding for mobile WebView bottom navigation */
