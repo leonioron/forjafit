@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, BookOpen, CalendarCheck2, CalendarDays } from 'lucide-react';
+import pkg from '../package.json';
 import { CatalogView } from './components/CatalogView';
 import { CompleteWorkoutSheet } from './components/CompleteWorkoutSheet';
 import { CustomExerciseModal } from './components/CustomExerciseModal';
@@ -291,9 +292,14 @@ export default function App() {
           <button
             type="button"
             onClick={() => setActiveTab('today')}
-            className="font-display text-lg md:text-xl font-bold tracking-tight text-white whitespace-nowrap shrink-0"
+            className="flex items-baseline gap-2 whitespace-nowrap shrink-0"
           >
-            ForjaFit
+            <span className="font-display text-lg md:text-xl font-bold tracking-tight text-white">
+              ForjaFit
+            </span>
+            <span className="text-[11px] font-mono text-slate-400 tabular-nums">
+              v{pkg.version}
+            </span>
           </button>
 
           <nav className="hidden md:flex items-center gap-6" aria-label="Navegação principal">
